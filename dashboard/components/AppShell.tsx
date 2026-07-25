@@ -52,8 +52,9 @@ function ProfileModal({ onClose }: { onClose: () => void }) {
     developer: "linear-gradient(135deg, #f59e0b, #d97706)",
   };
 
+  const [confirmingSignOut, setConfirmingSignOut] = useState(false);
+
   const handleSignOut = async () => {
-    if (!confirm("Sign out of CodeVault?")) return;
     onClose();
     await supabaseAuth.signOut();
     router.replace("/login");
@@ -199,33 +200,91 @@ function ProfileModal({ onClose }: { onClose: () => void }) {
         </div>
 
         {/* Bottom Actions */}
-        <div style={{ display: "flex", gap: 10 }}>
-          <Link href="/dashboard/settings" onClick={onClose}
+        {confirmingSignOut ? (
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
             style={{
-              flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-              padding: "10px 16px", borderRadius: 12, border: "1.5px solid var(--line)",
-              background: "var(--card-bg)", color: "var(--ink)", fontSize: 13, fontWeight: 600,
-              textDecoration: "none", cursor: "pointer", transition: "all 0.2s",
+              borderRadius: 16,
+              border: "1.5px solid rgba(239,68,68,0.25)",
+              background: "rgba(239,68,68,0.05)",
+              padding: "18px 20px",
+              display: "flex", flexDirection: "column", gap: 14,
             }}
-            onMouseEnter={e => { e.currentTarget.style.background = "var(--violet-soft)"; e.currentTarget.style.color = "var(--violet)"; }}
-            onMouseLeave={e => { e.currentTarget.style.background = "var(--card-bg)"; e.currentTarget.style.color = "var(--ink)"; }}
           >
-            <Settings size={14} /> Settings
-          </Link>
-          <button
-            onClick={handleSignOut}
-            style={{
-              flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-              padding: "10px 16px", borderRadius: 12, border: "1.5px solid rgba(239,68,68,0.2)",
-              background: "transparent", color: "#ef4444", fontSize: 13, fontWeight: 600,
-              cursor: "pointer", transition: "all 0.2s",
-            }}
-            onMouseEnter={e => { e.currentTarget.style.background = "rgba(239,68,68,0.06)"; }}
-            onMouseLeave={e => { e.currentTarget.style.background = "transparent"; }}
-          >
-            <LogOut size={14} /> Sign Out
-          </button>
-        </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <div style={{
+                width: 34, height: 34, borderRadius: "50%",
+                background: "rgba(239,68,68,0.12)",
+                display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+              }}>
+                <LogOut size={15} style={{ color: "#ef4444" }} />
+              </div>
+              <div>
+                <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: "var(--ink)" }}>Sign out?</p>
+                <p style={{ margin: 0, fontSize: 11, color: "var(--muted)", marginTop: 2 }}>You'll need to log in again to access your vault.</p>
+              </div>
+            </div>
+            <div style={{ display: "flex", gap: 8 }}>
+              <button
+                onClick={() => setConfirmingSignOut(false)}
+                style={{
+                  flex: 1, padding: "9px 16px", borderRadius: 10,
+                  border: "1.5px solid var(--line)", background: "var(--card-bg)",
+                  color: "var(--ink)", fontSize: 13, fontWeight: 600, cursor: "pointer",
+                  transition: "all 0.2s",
+                }}
+                onMouseEnter={e => { e.currentTarget.style.background = "var(--violet-soft)"; e.currentTarget.style.color = "var(--violet)"; }}
+                onMouseLeave={e => { e.currentTarget.style.background = "var(--card-bg)"; e.currentTarget.style.color = "var(--ink)"; }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSignOut}
+                style={{
+                  flex: 1, padding: "9px 16px", borderRadius: 10,
+                  border: "none",
+                  background: "linear-gradient(135deg, #ef4444, #dc2626)",
+                  color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer",
+                  boxShadow: "0 4px 14px rgba(239,68,68,0.3)",
+                  transition: "all 0.2s",
+                }}
+                onMouseEnter={e => { e.currentTarget.style.boxShadow = "0 6px 20px rgba(239,68,68,0.45)"; e.currentTarget.style.transform = "translateY(-1px)"; }}
+                onMouseLeave={e => { e.currentTarget.style.boxShadow = "0 4px 14px rgba(239,68,68,0.3)"; e.currentTarget.style.transform = "translateY(0)"; }}
+              >
+                Yes, sign me out
+              </button>
+            </div>
+          </motion.div>
+        ) : (
+          <div style={{ display: "flex", gap: 10 }}>
+            <Link href="/dashboard/settings" onClick={onClose}
+              style={{
+                flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+                padding: "10px 16px", borderRadius: 12, border: "1.5px solid var(--line)",
+                background: "var(--card-bg)", color: "var(--ink)", fontSize: 13, fontWeight: 600,
+                textDecoration: "none", cursor: "pointer", transition: "all 0.2s",
+              }}
+              onMouseEnter={e => { e.currentTarget.style.background = "var(--violet-soft)"; e.currentTarget.style.color = "var(--violet)"; }}
+              onMouseLeave={e => { e.currentTarget.style.background = "var(--card-bg)"; e.currentTarget.style.color = "var(--ink)"; }}
+            >
+              <Settings size={14} /> Settings
+            </Link>
+            <button
+              onClick={() => setConfirmingSignOut(true)}
+              style={{
+                flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+                padding: "10px 16px", borderRadius: 12, border: "1.5px solid rgba(239,68,68,0.2)",
+                background: "transparent", color: "#ef4444", fontSize: 13, fontWeight: 600,
+                cursor: "pointer", transition: "all 0.2s",
+              }}
+              onMouseEnter={e => { e.currentTarget.style.background = "rgba(239,68,68,0.06)"; }}
+              onMouseLeave={e => { e.currentTarget.style.background = "transparent"; }}
+            >
+              <LogOut size={14} /> Sign Out
+            </button>
+          </div>
+        )}
       </motion.div>
     </motion.div>
   );
@@ -363,9 +422,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <Image
               src="/main-logo.png"
               alt="CodeVault"
-              width={26}
-              height={26}
-              style={{ borderRadius: 6, flexShrink: 0 }}
+              width={72}
+              height={72}
+              style={{ borderRadius: 12, flexShrink: 0 }}
               priority
             />
             <span style={{ fontSize: 16, fontWeight: 800, letterSpacing: "-0.04em" }}>
@@ -573,13 +632,18 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </header>
 
           {/* Page content */}
-          <motion.div
-            key={path}
-            initial={{ opacity: 0, y: 6 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.16 }}>
-            {children}
-          </motion.div>
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={path}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -6 }}
+              transition={{ duration: 0.22, ease: [0.4, 0, 0.2, 1] }}
+              style={{ willChange: "opacity, transform" }}
+            >
+              {children}
+            </motion.div>
+          </AnimatePresence>
 
           {/* Mobile bottom nav */}
           <div className="mobile-nav">

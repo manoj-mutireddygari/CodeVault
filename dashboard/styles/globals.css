@@ -402,7 +402,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 }
 
 .hero-orbit {
-  border: 0;
+  border: 2px solid var(--violet);
   width: 120px;
   height: 120px;
   border-radius: 50%;
@@ -410,28 +410,28 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, var(--violet) 0%, #a78bfa 100%);
-  box-shadow: 0 0 0 10px rgba(99, 91, 255, 0.12), 0 12px 32px rgba(99, 91, 255, 0.3);
+  background: var(--violet-soft);
+  box-shadow: 0 0 0 8px color-mix(in srgb, var(--violet) 10%, transparent), 0 12px 32px color-mix(in srgb, var(--violet) 20%, transparent);
   flex-shrink: 0;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
 .hero-orbit:hover {
   transform: scale(1.04);
-  box-shadow: 0 0 0 14px rgba(99, 91, 255, 0.1), 0 16px 40px rgba(99, 91, 255, 0.35);
+  box-shadow: 0 0 0 14px color-mix(in srgb, var(--violet) 12%, transparent), 0 16px 40px color-mix(in srgb, var(--violet) 28%, transparent);
 }
 
 .hero-orbit span {
   font-size: 30px;
   font-weight: 900;
   letter-spacing: -0.04em;
-  color: #ffffff;
+  color: var(--violet);
   line-height: 1;
 }
 
 .hero-orbit small {
   font-size: 9px;
-  color: rgba(255,255,255,0.75);
+  color: var(--muted);
   margin-top: 2px;
   letter-spacing: 0.04em;
   text-transform: uppercase;
