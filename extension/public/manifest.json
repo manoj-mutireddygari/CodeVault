@@ -4,7 +4,7 @@
   "version": "0.1.0",
   "description": "Save accepted LeetCode solutions to GitHub.",
   "permissions": ["storage", "notifications", "tabs"],
-  "host_permissions": ["https://leetcode.com/*", "https://api.github.com/*", "http://localhost:3000/*", "http://127.0.0.1:3000/*"],
+  "host_permissions": ["https://leetcode.com/*", "https://api.github.com/*", "https://code-vault-pi-gray.vercel.app/*", "https://*.vercel.app/*", "http://localhost:3000/*", "http://127.0.0.1:3000/*"],
   "icons": {
     "16": "icon-16.png",
     "32": "icon-32.png",
@@ -15,7 +15,7 @@
   "content_scripts": [
     { "matches": ["https://leetcode.com/problems/*"], "js": ["assets/pageScript.js"], "run_at": "document_start", "world": "MAIN" },
     { "matches": ["https://leetcode.com/problems/*"], "js": ["assets/content.js"], "run_at": "document_idle" },
-    { "matches": ["http://localhost:3000/*", "http://127.0.0.1:3000/*"], "js": ["assets/dashboardBridge.js"], "run_at": "document_idle" }
+    { "matches": ["https://code-vault-pi-gray.vercel.app/*", "https://*.vercel.app/*", "http://localhost:3000/*", "http://127.0.0.1:3000/*"], "js": ["assets/dashboardBridge.js"], "run_at": "document_idle" }
   ],
   "web_accessible_resources": [
     {
