@@ -57,7 +57,7 @@ function Section({
             border: `1px solid ${VB}`,
             display: "flex",
             alignItems: "center",
-            justify: "center",
+            justifyContent: "center",
             flexShrink: 0,
           }}
         >
