@@ -1,0 +1,30 @@
+{
+  "name": "codevault",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "workspaces": [
+    "apps/*",
+    "packages/*",
+    "extension",
+    "dashboard",
+    "shared"
+  ],
+  "scripts": {
+    "dev:extension": "npm --workspace extension run dev",
+    "build:extension": "npm --workspace extension run build && node scripts/zip-extension.js",
+    "zip:extension": "node scripts/zip-extension.js",
+    "dev:dashboard": "npm --workspace dashboard run dev",
+    "build:dashboard": "npm --workspace dashboard run build",
+    "build": "npm run build:extension && npm --workspace dashboard run build",
+    "typecheck": "npm --workspace extension run typecheck && npm --workspace dashboard run typecheck",
+    "test": "vitest run"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "devDependencies": {
+    "jiti": "^2.7.0",
+    "vitest": "^4.1.10"
+  }
+}

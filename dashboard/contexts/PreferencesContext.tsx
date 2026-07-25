@@ -1,0 +1,7 @@
+"use client";
+import { createContext, useContext, useEffect, useState } from "react";
+type Theme = "light" | "dark" | "system";
+type Preferences = { theme: Theme; motion: boolean; compact: boolean; setTheme: (theme: Theme) => void; setMotion: (enabled: boolean) => void; setCompact: (enabled: boolean) => void; };
+const Context = createContext<Preferences | undefined>(undefined); const key = "codevault:preferences";
+export function PreferencesProvider({ children }: { children: React.ReactNode }) { const [theme, setThemeState] = useState<Theme>("system"); const [motion, setMotionState] = useState(true); const [compact, setCompactState] = useState(false); useEffect(() => { const value = JSON.parse(localStorage.getItem(key) ?? "{}") as Partial<Preferences>; setThemeState(value.theme ?? "system"); setMotionState(value.motion ?? true); setCompactState(value.compact ?? false); }, []); useEffect(() => { const actual = theme === "system" ? (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light") : theme; document.documentElement.dataset.theme = actual; document.documentElement.dataset.motion = String(motion); document.documentElement.dataset.density = compact ? "compact" : "comfortable"; localStorage.setItem(key, JSON.stringify({ theme, motion, compact })); }, [theme,motion,compact]); return <Context.Provider value={{theme,motion,compact,setTheme:setThemeState,setMotion:setMotionState,setCompact:setCompactState}}>{children}</Context.Provider>; }
+export const usePreferences = () => useContext(Context)!;

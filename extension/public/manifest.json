@@ -1,0 +1,37 @@
+{
+  "manifest_version": 3,
+  "name": "CodeVault",
+  "version": "0.1.0",
+  "description": "Save accepted LeetCode solutions to GitHub.",
+  "permissions": ["storage", "notifications", "tabs"],
+  "host_permissions": ["https://leetcode.com/*", "https://api.github.com/*", "http://localhost:3000/*", "http://127.0.0.1:3000/*"],
+  "icons": {
+    "16": "icon-16.png",
+    "32": "icon-32.png",
+    "48": "icon-48.png",
+    "128": "icon-128.png"
+  },
+  "background": { "service_worker": "assets/background.js", "type": "module" },
+  "content_scripts": [
+    { "matches": ["https://leetcode.com/problems/*"], "js": ["assets/pageScript.js"], "run_at": "document_start", "world": "MAIN" },
+    { "matches": ["https://leetcode.com/problems/*"], "js": ["assets/content.js"], "run_at": "document_idle" },
+    { "matches": ["http://localhost:3000/*", "http://127.0.0.1:3000/*"], "js": ["assets/dashboardBridge.js"], "run_at": "document_idle" }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["assets/*"],
+      "matches": ["https://leetcode.com/*"]
+    }
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "CodeVault",
+    "default_icon": {
+      "16": "icon-16.png",
+      "32": "icon-32.png",
+      "48": "icon-48.png",
+      "128": "icon-128.png"
+    }
+  },
+  "options_page": "options.html"
+}
