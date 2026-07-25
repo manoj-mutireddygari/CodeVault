@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import {
@@ -28,6 +29,7 @@ function useResolvedTheme() {
 }
 
 export function OnboardingModal({ onComplete }: { onComplete: () => void }) {
+  const [mounted,     setMounted]     = useState(false);
   const [step,        setStep]        = useState(1);
   const [owner,       setOwner]       = useState("");
   const [repo,        setRepo]        = useState("");
@@ -38,6 +40,10 @@ export function OnboardingModal({ onComplete }: { onComplete: () => void }) {
 
   const resolvedTheme = useResolvedTheme();
   const isDark = resolvedTheme === "dark";
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // detect extension on step 2
   useEffect(() => {
@@ -205,11 +211,12 @@ export function OnboardingModal({ onComplete }: { onComplete: () => void }) {
 
   const s = {
     backdrop: {
-      position: "fixed" as const, inset: 0, zIndex: 9000,
+      position: "fixed" as const, inset: 0, zIndex: 9999,
       background: "rgba(9, 11, 18, 0.65)",
       backdropFilter: "blur(14px) saturate(190%)",
       WebkitBackdropFilter: "blur(14px) saturate(190%)",
       display: "flex", alignItems: "center", justifyContent: "center", padding: 24,
+      overflowY: "auto" as const,
     },
     card: {
       background: colors.cardBg,
@@ -217,6 +224,9 @@ export function OnboardingModal({ onComplete }: { onComplete: () => void }) {
       borderRadius: 24,
       boxShadow: colors.shadow,
       width: "100%", maxWidth: 480, overflow: "hidden",
+      maxHeight: "calc(100vh - 48px)",
+      display: "flex", flexDirection: "column" as const,
+      margin: "auto",
     },
     header: {
       display: "flex", alignItems: "center", gap: 14,
@@ -228,7 +238,7 @@ export function OnboardingModal({ onComplete }: { onComplete: () => void }) {
       display: "flex", alignItems: "center", justifyContent: "center",
       boxShadow: "0 4px 12px rgba(109,106,254,0.15)", overflow: "hidden",
     },
-    body: { padding: 28, display: "flex", flexDirection: "column" as const, gap: 16, minHeight: 300 },
+    body: { padding: 28, display: "flex", flexDirection: "column" as const, gap: 16, minHeight: 280, overflowY: "auto" as const },
     stepIcon: (color: string, bg: string) => ({
       width: 52, height: 52, borderRadius: 14,
       background: bg, color,
@@ -265,7 +275,9 @@ export function OnboardingModal({ onComplete }: { onComplete: () => void }) {
     actions: { display: "flex", alignItems: "center", gap: 10, marginTop: 6, flexWrap: "wrap" as const },
   };
 
-  return (
+  if (!mounted) return null;
+
+  return createPortal(
     <AnimatePresence>
       <motion.div style={s.backdrop}
         initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
@@ -506,6 +518,7 @@ export function OnboardingModal({ onComplete }: { onComplete: () => void }) {
           </div>
         </motion.div>
       </motion.div>
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   );
 }

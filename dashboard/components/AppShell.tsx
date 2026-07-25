@@ -11,6 +11,7 @@ import {
   Zap, Mail, Calendar,
 } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { useRepository } from "../contexts/RepositoryContext";
 import { useExtension } from "../hooks/useExtension";
 import { supabaseAuth, syncStateToExtension } from "../services/supabaseAuth";
@@ -36,6 +37,10 @@ const PLAN_STYLE: Record<string, { bg: string; color: string }> = {
    PROFILE MODAL  (Premium Glassmorphic Variant)
 ════════════════════════════════════════════════════════════ */
 function ProfileModal({ onClose }: { onClose: () => void }) {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
   const router     = useRouter();
   const profile    = supabaseAuth.getProfile();
   const repo       = useRepository();
@@ -60,7 +65,9 @@ function ProfileModal({ onClose }: { onClose: () => void }) {
     router.replace("/login");
   };
 
-  return (
+  if (!mounted) return null;
+
+  return createPortal(
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
@@ -74,6 +81,7 @@ function ProfileModal({ onClose }: { onClose: () => void }) {
         WebkitBackdropFilter: "blur(14px) saturate(190%)",
         display: "flex", alignItems: "center", justifyContent: "center",
         padding: 24,
+        overflowY: "auto",
       }}
     >
       <motion.div
@@ -92,6 +100,9 @@ function ProfileModal({ onClose }: { onClose: () => void }) {
           padding: 28,
           position: "relative",
           display: "flex", flexDirection: "column", gap: 20,
+          maxHeight: "calc(100vh - 48px)",
+          overflowY: "auto",
+          margin: "auto",
         }}
       >
         {/* Close Button */}
@@ -286,7 +297,8 @@ function ProfileModal({ onClose }: { onClose: () => void }) {
           </div>
         )}
       </motion.div>
-    </motion.div>
+    </motion.div>,
+    document.body
   );
 }
 
