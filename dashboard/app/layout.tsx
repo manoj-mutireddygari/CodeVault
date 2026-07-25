@@ -10,7 +10,16 @@ export const metadata: Metadata = {
   title: { default: "CodeVault", template: "%s · CodeVault" },
   description: "GitHub-first developer solution analytics.",
   applicationName: "CodeVault",
-  robots: { index: false, follow: false }
+  robots: { index: false, follow: false },
+  icons: {
+    icon: [
+      { url: "/main-logo.png", type: "image/png" },
+      { url: "/icon.png", type: "image/png" },
+      { url: "/favicon.ico" },
+    ],
+    shortcut: "/main-logo.png",
+    apple: "/main-logo.png",
+  },
 };
 
 export default function Layout({ children }: Readonly<{ children: React.ReactNode }>) {
