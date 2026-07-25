@@ -66,7 +66,7 @@ export default function RepositoryPage() {
         {/* Main Panel */}
         <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
           {/* Card: Repository Details */}
-          <article className="glass-card" style={{ padding: 28, borderRadius: 20, background: "white", border: "1px solid #e8eaf2" }}>
+          <article className="glass-card" style={{ padding: 28, borderRadius: 20 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 24 }}>
               <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
                 <div style={{ width: 48, height: 48, background: "var(--violet-soft)", color: "var(--violet)", borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -115,7 +115,7 @@ export default function RepositoryPage() {
           </article>
 
           {/* Card: Audit Tool */}
-          <article className="glass-card" style={{ padding: 28, borderRadius: 20, background: "white", border: "1px solid #e8eaf2" }}>
+          <article className="glass-card" style={{ padding: 28, borderRadius: 20 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
               <div>
                 <h3 style={{ fontSize: 16, fontWeight: 800, margin: 0 }}>Repository Diagnostic Audit</h3>
@@ -127,11 +127,11 @@ export default function RepositoryPage() {
             </div>
 
             {auditLogs.length > 0 && (
-              <div style={{ background: "#0f172a", color: "#38bdf8", fontFamily: "monospace", padding: 16, borderRadius: 12, fontSize: 12, lineHeight: 1.6, display: "flex", flexDirection: "column", gap: 4 }}>
+              <div style={{ background: "var(--violet-soft)", border: "1px solid var(--line)", color: "var(--violet)", fontFamily: "monospace", padding: 16, borderRadius: 12, fontSize: 12, lineHeight: 1.6, display: "flex", flexDirection: "column", gap: 4 }}>
                 {auditLogs.map((log, i) => (
                   <div key={i} style={{ display: "flex", gap: 8 }}>
-                    <span style={{ color: "#64748b" }}>&gt;</span>
-                    <span style={{ color: log.includes("HEALTHY") ? "#34d399" : "#38bdf8" }}>{log}</span>
+                    <span style={{ color: "var(--muted)" }}>&gt;</span>
+                    <span style={{ color: log.includes("HEALTHY") ? "#34d399" : "var(--violet)" }}>{log}</span>
                   </div>
                 ))}
               </div>
@@ -141,7 +141,7 @@ export default function RepositoryPage() {
 
         {/* Sidebar Info */}
         <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
-          <article className="glass-card" style={{ padding: 24, borderRadius: 20, background: "white", border: "1px solid #e8eaf2" }}>
+          <article className="glass-card" style={{ padding: 24, borderRadius: 20 }}>
             <h3 style={{ fontSize: 15, fontWeight: 800, margin: "0 0 12px" }}>Integration Info</h3>
             <ul style={{ paddingLeft: 16, fontSize: 12, color: "var(--muted)", lineHeight: 1.6, display: "flex", flexDirection: "column", gap: 10 }}>
               <li>Solutions are saved as directories containing the code file and a parsed metadata schema.</li>

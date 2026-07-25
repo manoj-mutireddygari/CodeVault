@@ -59,14 +59,14 @@ export default function HelpPage() {
         {/* Main Panel */}
         <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
           {/* Card: FAQ Accordion */}
-          <article className="glass-card" style={{ padding: 28, borderRadius: 20, background: "white", border: "1px solid #e8eaf2" }}>
-            <h2 style={{ fontSize: 18, fontWeight: 850, margin: "0 0 20px" }}>Frequently Asked Questions</h2>
+          <article className="glass-card" style={{ padding: 28, borderRadius: 20 }}>
+            <h2 style={{ fontSize: 17, fontWeight: 650, margin: "0 0 20px" }}>Frequently Asked Questions</h2>
             <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
               {faqs.map((faq, idx) => (
-                <div key={idx} style={{ border: "1px solid #e2e8f0", borderRadius: 12, overflow: "hidden" }}>
+                <div key={idx} style={{ border: "1px solid var(--line)", borderRadius: 12, overflow: "hidden" }}>
                   <button
                     onClick={() => setActiveFaq(activeFaq === idx ? null : idx)}
-                    style={{ width: "100%", padding: "16px 20px", background: "none", border: 0, textAlign: "left", display: "flex", justifyContent: "space-between", alignItems: "center", cursor: "pointer", fontWeight: 700, fontSize: 13 }}
+                    style={{ width: "100%", padding: "16px 20px", background: "none", border: 0, textAlign: "left", display: "flex", justifyContent: "space-between", alignItems: "center", cursor: "pointer", fontWeight: 600, fontSize: 13 }}
                   >
                     <span>{faq.q}</span>
                     <span style={{ color: "var(--violet)", fontSize: 16 }}>{activeFaq === idx ? "−" : "+"}</span>
@@ -82,17 +82,17 @@ export default function HelpPage() {
           </article>
 
           {/* Card: Backups */}
-          <article className="glass-card" style={{ padding: 28, borderRadius: 20, background: "white", border: "1px solid #e8eaf2" }}>
+          <article className="glass-card" style={{ padding: 28, borderRadius: 20 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
               <div>
-                <h2 style={{ fontSize: 17, fontWeight: 850, margin: 0 }}>Local Backup & Export</h2>
+                <h2 style={{ fontSize: 16, fontWeight: 650, margin: 0 }}>Local Backup & Export</h2>
                 <p style={{ fontSize: 13, color: "var(--muted)", margin: 0 }}>Export your complete solved problems list as a single JSON data payload.</p>
               </div>
               <button
                 disabled={downloading || !vault.data?.problems}
                 onClick={handleDownloadBackup}
                 className="outline"
-                style={{ padding: "10px 16px", borderRadius: 10, fontSize: 13, fontWeight: 700, display: "flex", alignItems: "center", gap: 6 }}
+                style={{ padding: "9px 16px", borderRadius: 10, fontSize: 13, fontWeight: 600, display: "flex", alignItems: "center", gap: 6 }}
               >
                 <Download size={14} /> {downloading ? "Preparing..." : "Export Solutions JSON"}
               </button>
@@ -102,8 +102,8 @@ export default function HelpPage() {
 
         {/* Sidebar Diagnostics */}
         <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
-          <article className="glass-card" style={{ padding: 24, borderRadius: 20, background: "white", border: "1px solid #e8eaf2" }}>
-            <h3 style={{ fontSize: 15, fontWeight: 850, margin: "0 0 16px", display: "flex", alignItems: "center", gap: 8 }}>
+          <article className="glass-card" style={{ padding: 24, borderRadius: 20 }}>
+            <h3 style={{ fontSize: 14, fontWeight: 650, margin: "0 0 16px", display: "flex", alignItems: "center", gap: 8 }}>
               <Terminal size={18} className="text-violet" /> Connection Check
             </h3>
             <div style={{ display: "flex", flexDirection: "column", gap: 12, fontSize: 12 }}>

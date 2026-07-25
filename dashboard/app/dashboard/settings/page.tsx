@@ -227,7 +227,7 @@ export default function SettingsPage() {
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 28 }}>
         <div>
           <p className="eyebrow">CONTROL CABINET</p>
-          <h1 style={{ margin: "6px 0 4px", fontSize: 28, fontWeight: 900 }}>Settings</h1>
+          <h1 style={{ margin: "6px 0 4px", fontSize: 26, fontWeight: 700 }}>Settings</h1>
           <p style={{ color: "var(--muted)", margin: 0, fontSize: 14 }}>Configure your profile, GitHub connection, appearance, and preferences.</p>
         </div>
         <div style={{
