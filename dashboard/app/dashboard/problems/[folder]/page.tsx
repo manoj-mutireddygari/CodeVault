@@ -4,8 +4,9 @@ import { ExternalLink, GitFork, ChevronLeft, Terminal, Code2 } from "lucide-reac
 import Link from "next/link";
 import { useState, useMemo } from "react";
 import { useRepository } from "../../../../contexts/RepositoryContext";
-import { useVault, useProblem } from "../../../../hooks/useVault";
+import { useVault, useProblem, useSolutionCode } from "../../../../hooks/useVault";
 import { EmptyState, LoadingGrid } from "../../../../components/StatePanels";
+import { MacOsCodeViewer } from "../../../../components/MacOsCodeViewer";
 
 export default function ProblemDetail() {
   const folder = useParams<{ folder: string }>().folder;
@@ -38,6 +39,7 @@ export default function ProblemDetail() {
   );
 
   const metadata = useProblem(repository, folder, activeSubmission?.language);
+  const solutionCode = useSolutionCode(repository, folder, activeSubmission?.language);
 
   if (!repository) return <main className="page"><EmptyState /></main>;
   if (vault.isLoading || metadata.isLoading) return <main className="page"><LoadingGrid /></main>;
@@ -154,16 +156,13 @@ export default function ProblemDetail() {
             </div>
           </dl>
         </article>
-        <article className="glass-card code-preview">
-          <header>
-            <Terminal size={16} />
-            <span>Source code ({activeSubmission.language}) available in GitHub</span>
-          </header>
-          <p>CodeVault keeps the original source for <b>{activeSubmission.language}</b>, README, and metadata together in your repository folder <code>{folder}</code>.</p>
-          <a href={githubFileUrl} target="_blank">
-            View {activeSubmission.language} source <ExternalLink size={14} />
-          </a>
-        </article>
+
+        <MacOsCodeViewer
+          code={solutionCode.data ?? ""}
+          language={activeSubmission.language}
+          githubUrl={githubFileUrl}
+          isLoading={solutionCode.isLoading}
+        />
       </section>
     </main>
   );

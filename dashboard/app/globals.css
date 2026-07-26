@@ -3295,3 +3295,252 @@ dd {
 .notif-dropdown .dropdown-empty-state svg {
   opacity: 0.5;
 }
+
+/* ════════════════════════════════════════════
+   MACOS TAB THEME CODE VIEWER (VS CODE STYLE)
+═══════════════════════════════════════════════ */
+
+.macos-code-card {
+  background: #ffffff;
+  border-radius: 12px;
+  border: 1px solid var(--line, #e2e8f0);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04), 0 1px 3px rgba(0, 0, 0, 0.02);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  height: 480px;
+}
+
+.macos-titlebar {
+  background: #f1f5f9;
+  border-bottom: 1px solid #e2e8f0;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 12px;
+  user-select: none;
+}
+
+[data-theme="dark"] .macos-titlebar {
+  background: #1e293b;
+  border-bottom-color: rgba(255, 255, 255, 0.1);
+}
+
+.macos-controls {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  width: 60px;
+}
+
+.mac-dot {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.mac-dot.red {
+  background-color: #ff5f56;
+  border: 0.5px solid #e0443e;
+}
+
+.mac-dot.yellow {
+  background-color: #ffbd2e;
+  border: 0.5px solid #dea123;
+}
+
+.mac-dot.green {
+  background-color: #27c93f;
+  border: 0.5px solid #1aab29;
+}
+
+.vscode-tab-container {
+  display: flex;
+  align-items: flex-end;
+  height: 100%;
+}
+
+.vscode-tab {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #ffffff;
+  border-top: 2px solid #2563eb;
+  border-left: 1px solid #e2e8f0;
+  border-right: 1px solid #e2e8f0;
+  padding: 0 14px;
+  height: 32px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #1e293b;
+  border-top-left-radius: 4px;
+  border-top-right-radius: 4px;
+}
+
+[data-theme="dark"] .vscode-tab {
+  background: #0f172a;
+  border-left-color: rgba(255, 255, 255, 0.1);
+  border-right-color: rgba(255, 255, 255, 0.1);
+  color: #f8fafc;
+}
+
+.tab-icon {
+  color: #2563eb;
+}
+
+.tab-filename {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+.tab-close-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: #94a3b8;
+  margin-left: 4px;
+}
+
+.macos-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.macos-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid #cbd5e1;
+  border-radius: 5px;
+  padding: 4px 9px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #334155;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.macos-btn:hover {
+  background: #ffffff;
+  border-color: #94a3b8;
+  color: #0f172a;
+}
+
+[data-theme="dark"] .macos-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.15);
+  color: #cbd5e1;
+}
+
+[data-theme="dark"] .macos-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+}
+
+.vscode-editor-body {
+  flex: 1;
+  background: #ffffff;
+  overflow: auto;
+  position: relative;
+}
+
+.vscode-code-container {
+  display: flex;
+  min-height: 100%;
+  font-family: Consolas, Menlo, Monaco, "Courier New", "Fira Code", monospace;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.vscode-gutter {
+  padding: 12px 10px 12px 0;
+  width: 44px;
+  text-align: right;
+  background: #ffffff;
+  border-right: 1px solid #e2e8f0;
+  user-select: none;
+  color: #94a3b8;
+  font-size: 12px;
+  flex-shrink: 0;
+}
+
+.line-number {
+  height: 1.6em;
+}
+
+.vscode-code-content {
+  padding: 12px 16px;
+  flex: 1;
+  overflow-x: auto;
+  color: #1e293b;
+  white-space: pre;
+}
+
+.code-line {
+  height: 1.6em;
+}
+
+/* Syntax Token Colors (VS Code Light Theme matching Image 2) */
+.tok-keyword-decl {
+  color: #0000ff;
+  font-weight: 500;
+}
+
+.tok-keyword-flow {
+  color: #af00db;
+  font-weight: 500;
+}
+
+.tok-type {
+  color: #0891b2;
+}
+
+.tok-method {
+  color: #795e26;
+}
+
+.tok-variable {
+  color: #0451a5;
+}
+
+.tok-number {
+  color: #098658;
+}
+
+.tok-string {
+  color: #a31515;
+}
+
+.tok-comment {
+  color: #008000;
+  font-style: italic;
+}
+
+.tok-operator {
+  color: #333333;
+}
+
+.vscode-loading,
+.vscode-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: 30px;
+  color: #64748b;
+  font-size: 13px;
+  gap: 12px;
+}
+
+.vscode-spinner {
+  width: 24px;
+  height: 24px;
+  border: 2px solid #e2e8f0;
+  border-top-color: #2563eb;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}

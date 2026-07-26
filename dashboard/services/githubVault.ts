@@ -397,13 +397,14 @@ export const githubVault = {
 
     if (supabase && session?.user?.id) {
       try {
+        const slug = folderName.replace(/^\d+-/, "");
         let query = supabase
           .from("submissions")
           .select("source_code")
-          .eq("folder_name", folderName);
+          .or(`folder_name.eq.${folderName},slug.eq.${slug}`);
 
         if (language) {
-          query = query.eq("language", language);
+          query = query.ilike("language", language);
         }
 
         const { data } = await query
@@ -414,7 +415,9 @@ export const githubVault = {
         if (data?.source_code) {
           return data.source_code;
         }
-      } catch (e) {}
+      } catch (e) {
+        console.warn("Failed to fetch solution code from Supabase:", e);
+      }
     }
 
     if (repository.owner === "octocat") {

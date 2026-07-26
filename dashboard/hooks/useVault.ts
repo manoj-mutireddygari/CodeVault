@@ -22,3 +22,13 @@ export const useProblem = (repository: RepositoryContext | undefined, folder?: s
     staleTime: 0,
     refetchOnWindowFocus: true,
   });
+
+export const useSolutionCode = (repository: RepositoryContext | undefined, folder?: string, language?: string) =>
+  useQuery({
+    queryKey: ["solutionCode", repository, folder, language],
+    queryFn: () => githubVault.getSolution(repository!, folder!, language!),
+    enabled: Boolean(repository && folder && language),
+    staleTime: 0,
+    refetchOnWindowFocus: true,
+  });
+
