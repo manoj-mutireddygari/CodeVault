@@ -21,7 +21,7 @@ function Popup() {
       const s = await vaultStorage.getSettings();
       const l = await vaultStorage.getLastUpload();
       const q = await vaultStorage.getQueue();
-      const sess = await vaultStorage.getSession();
+      const sess = await vaultStorage.ensureValidSession();
       setSettings(s);
       setLast(l);
       setQueue(q);
@@ -39,7 +39,7 @@ function Popup() {
     return () => clearInterval(interval);
   }, []);
 
-  const authenticated = Boolean(session && session.expiresAt > Date.now());
+  const authenticated = Boolean(session);
   const isSyncing = isRetryingAll || retryingIds.length > 0 || queue.some((i) => (i.status as string) === "syncing" || i.status === "pending");
   const repoString = settings?.owner && settings?.repository ? `${settings.owner}/${settings.repository}` : "Not mapped";
 

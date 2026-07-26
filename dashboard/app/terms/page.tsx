@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import { ArrowLeft, ArrowRight, Scale, Shield, Code2, AlertCircle, UserCheck, Globe, Lock, RefreshCw } from "lucide-react";
+import PublicNavbar from "../../components/PublicNavbar";
 
 const V = "#635bff";
 const VS = "#f4f3ff";
@@ -57,25 +58,10 @@ export default function TermsPage() {
     <div style={{ background: "#fff", color: "#0f172a", minHeight: "100vh", fontFamily: "Inter, ui-sans-serif, system-ui, sans-serif" }}>
 
       {/* ── NAV ── */}
-      <header style={{ position: "sticky", top: 0, zIndex: 50, borderBottom: "1px solid #f1f5f9", background: "rgba(255,255,255,0.97)", backdropFilter: "blur(16px)", padding: "0 48px", height: 64, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-        <Link href="/" style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none" }}>
-          <Image src="/main-logo.png" alt="CodeVault" width={26} height={26} style={{ borderRadius: 7 }} />
-          <span style={{ fontSize: 16, fontWeight: 800, letterSpacing: "-0.04em", color: "#0f172a" }}>CodeVault</span>
-          <span style={{ fontSize: 13, color: "#94a3b8", fontWeight: 400, marginLeft: 4 }}>/ Terms of Service</span>
-        </Link>
-        <div style={{ display: "flex", gap: 24, fontSize: 13, fontWeight: 500, color: "#64748b" }}>
-          <Link href="/privacy" style={{ textDecoration: "none", color: "inherit" }}>Privacy Policy</Link>
-          <Link href="/faq" style={{ textDecoration: "none", color: "inherit" }}>FAQ</Link>
-        </div>
-        <Link href="/" style={{ display: "flex", alignItems: "center", gap: 7, fontSize: 13, fontWeight: 600, color: "#64748b", textDecoration: "none", padding: "8px 14px", border: "1px solid #e2e8f0", borderRadius: 9 }}
-          onMouseEnter={e => { e.currentTarget.style.borderColor = VB; e.currentTarget.style.color = V; }}
-          onMouseLeave={e => { e.currentTarget.style.borderColor = "#e2e8f0"; e.currentTarget.style.color = "#64748b"; }}>
-          <ArrowLeft size={13} /> Back to Home
-        </Link>
-      </header>
+      <PublicNavbar />
 
       {/* ── HERO ── */}
-      <section style={{ padding: "64px 48px 48px", borderBottom: "1px solid #f1f5f9", background: "#fafbfe" }}>
+      <section className="responsive-hero-section" style={{ padding: "64px 48px 48px", borderBottom: "1px solid #f1f5f9", background: "#fafbfe" }}>
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
           <div style={{ maxWidth: 800, margin: "0 auto" }}>
             <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: VS, border: `1px solid ${VB}`, borderRadius: 100, padding: "6px 16px", fontSize: 12, fontWeight: 600, color: V, marginBottom: 24 }}>Legal</div>
@@ -92,12 +78,12 @@ export default function TermsPage() {
         </motion.div>
       </section>
 
-      <div style={{ maxWidth: 1100, margin: "0 auto", display: "flex", gap: 0 }}>
+      <div className="responsive-sidebar-layout" style={{ maxWidth: 1100, margin: "0 auto", display: "flex", gap: 0 }}>
 
         {/* ── SIDEBAR ── */}
-        <aside style={{ width: 260, flexShrink: 0, padding: "48px 0 48px 48px", position: "sticky", top: 64, height: "calc(100vh - 64px)", overflowY: "auto" }}>
+        <aside className="responsive-sidebar" style={{ width: 260, flexShrink: 0, padding: "48px 0 48px 48px", position: "sticky", top: 64, height: "calc(100vh - 64px)", overflowY: "auto" }}>
           <div style={{ fontSize: 11, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 16 }}>Table of Contents</div>
-          <nav style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+          <nav style={{ display: "flex", flexDirection: "column", gap: 2, flexWrap: "wrap" }}>
             {sections.map(sec => (
               <a key={sec.id} href={`#${sec.id}`} style={{
                 display: "flex", alignItems: "center", gap: 10, padding: "9px 12px",
@@ -120,7 +106,7 @@ export default function TermsPage() {
         </aside>
 
         {/* ── CONTENT ── */}
-        <main style={{ flex: 1, padding: "48px 56px 80px" }}>
+        <main className="responsive-main-content" style={{ flex: 1, padding: "48px 56px 80px" }}>
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4 }}>
 
             {/* Summary box */}

@@ -25,6 +25,8 @@ import {
   Terminal,
 } from "lucide-react";
 import { supabaseAuth } from "../services/supabaseAuth";
+import PublicNavbar from "../components/PublicNavbar";
+import { gsap } from "gsap";
 
 /* Animated Counter */
 function Counter({ to, suffix = "" }: { to: number; suffix?: string }) {
@@ -129,6 +131,21 @@ export default function LandingPage() {
   const [activeLang, setActiveLang] = useState<"python" | "cpp" | "typescript">("python");
   const [scrolled, setScrolled] = useState(false);
 
+  // GSAP Refs
+  const heroBadgeRef = useRef<HTMLDivElement>(null);
+  const heroHeadlineRef = useRef<HTMLHeadingElement>(null);
+  const heroSubRef = useRef<HTMLParagraphElement>(null);
+  const heroCtaRef = useRef<HTMLDivElement>(null);
+  const heroTrustRef = useRef<HTMLDivElement>(null);
+  const ideShowcaseRef = useRef<HTMLDivElement>(null);
+  const heroGlowRef = useRef<HTMLDivElement>(null);
+  const codePanelRef = useRef<HTMLDivElement>(null);
+
+  const featuresGridRef = useRef<HTMLDivElement>(null);
+  const stepsGridRef = useRef<HTMLDivElement>(null);
+  const architectureRef = useRef<HTMLDivElement>(null);
+  const directoryTreeRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     setIsAuthenticated(Boolean(supabaseAuth.getSession()));
   }, []);
@@ -140,6 +157,204 @@ export default function LandingPage() {
   }, []);
 
   const go = () => router.push(isAuthenticated ? "/dashboard" : "/login");
+
+  // GSAP Hero Entrance Timeline & Ambient Glow Loop
+  useEffect(() => {
+    const ctx = gsap.context(() => {
+      const tl = gsap.timeline({ defaults: { ease: "power3.out" } });
+
+      if (heroBadgeRef.current) {
+        tl.fromTo(
+          heroBadgeRef.current,
+          { opacity: 0, y: -20, scale: 0.9 },
+          { opacity: 1, y: 0, scale: 1, duration: 0.5, ease: "back.out(1.7)" }
+        );
+      }
+
+      if (heroHeadlineRef.current) {
+        tl.fromTo(
+          heroHeadlineRef.current,
+          { opacity: 0, y: 30 },
+          { opacity: 1, y: 0, duration: 0.7 },
+          "-=0.3"
+        );
+      }
+
+      if (heroSubRef.current) {
+        tl.fromTo(
+          heroSubRef.current,
+          { opacity: 0, y: 20 },
+          { opacity: 1, y: 0, duration: 0.5 },
+          "-=0.4"
+        );
+      }
+
+      if (heroCtaRef.current && heroCtaRef.current.children) {
+        tl.fromTo(
+          Array.from(heroCtaRef.current.children),
+          { opacity: 0, y: 20, scale: 0.95 },
+          { opacity: 1, y: 0, scale: 1, duration: 0.5, stagger: 0.1, ease: "back.out(1.4)" },
+          "-=0.3"
+        );
+      }
+
+      if (heroTrustRef.current && heroTrustRef.current.children) {
+        tl.fromTo(
+          Array.from(heroTrustRef.current.children),
+          { opacity: 0, y: 15 },
+          { opacity: 1, y: 0, duration: 0.4, stagger: 0.08 },
+          "-=0.2"
+        );
+      }
+
+      if (ideShowcaseRef.current) {
+        tl.fromTo(
+          ideShowcaseRef.current,
+          { opacity: 0, y: 50, rotateX: 6 },
+          { opacity: 1, y: 0, rotateX: 0, duration: 0.9, ease: "power4.out" },
+          "-=0.4"
+        );
+      }
+
+      // Ambient Breathing Glow Loop
+      if (heroGlowRef.current) {
+        gsap.to(heroGlowRef.current, {
+          x: "random(-40, 40)",
+          y: "random(-30, 30)",
+          scale: 1.12,
+          duration: 6,
+          repeat: -1,
+          yoyo: true,
+          ease: "sine.inOut",
+        });
+      }
+    });
+
+    return () => ctx.revert();
+  }, []);
+
+  // GSAP Code Tab Transition Effect
+  useEffect(() => {
+    if (codePanelRef.current) {
+      gsap.fromTo(
+        codePanelRef.current,
+        { opacity: 0, y: 8, scale: 0.99 },
+        { opacity: 1, y: 0, scale: 1, duration: 0.3, ease: "power3.out" }
+      );
+    }
+  }, [activeLang]);
+
+  // Scroll Reveal Observer for Features Grid
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting && featuresGridRef.current) {
+            gsap.fromTo(
+              Array.from(featuresGridRef.current.children),
+              { opacity: 0, y: 35, scale: 0.95 },
+              { opacity: 1, y: 0, scale: 1, duration: 0.6, stagger: 0.08, ease: "back.out(1.2)" }
+            );
+            observer.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.15 }
+    );
+
+    if (featuresGridRef.current) observer.observe(featuresGridRef.current);
+    return () => observer.disconnect();
+  }, []);
+
+  // Scroll Reveal Observer for Steps Grid
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting && stepsGridRef.current) {
+            gsap.fromTo(
+              Array.from(stepsGridRef.current.children),
+              { opacity: 0, y: 40, x: -10 },
+              { opacity: 1, y: 0, x: 0, duration: 0.6, stagger: 0.12, ease: "power3.out" }
+            );
+            observer.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.15 }
+    );
+
+    if (stepsGridRef.current) observer.observe(stepsGridRef.current);
+    return () => observer.disconnect();
+  }, []);
+
+  // Scroll Reveal Observer for Architecture Section
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            if (architectureRef.current) {
+              gsap.fromTo(
+                architectureRef.current,
+                { opacity: 0, x: -40 },
+                { opacity: 1, x: 0, duration: 0.7, ease: "power3.out" }
+              );
+            }
+            if (directoryTreeRef.current) {
+              gsap.fromTo(
+                directoryTreeRef.current,
+                { opacity: 0, x: 40, scale: 0.96 },
+                { opacity: 1, x: 0, scale: 1, duration: 0.7, ease: "power3.out", delay: 0.15 }
+              );
+            }
+            observer.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.15 }
+    );
+
+    if (architectureRef.current) observer.observe(architectureRef.current);
+    return () => observer.disconnect();
+  }, []);
+
+  // 3D Parallax Mouse Tracking on IDE Showcase
+  const handleIdeMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!ideShowcaseRef.current) return;
+    const rect = ideShowcaseRef.current.getBoundingClientRect();
+    const x = (e.clientX - rect.left) / rect.width - 0.5;
+    const y = (e.clientY - rect.top) / rect.height - 0.5;
+    gsap.to(ideShowcaseRef.current, {
+      rotateY: x * 6,
+      rotateX: -y * 6,
+      duration: 0.4,
+      ease: "power2.out",
+    });
+  };
+
+  const handleIdeMouseLeave = () => {
+    if (!ideShowcaseRef.current) return;
+    gsap.to(ideShowcaseRef.current, {
+      rotateY: 0,
+      rotateX: 0,
+      duration: 0.8,
+      ease: "power2.out",
+    });
+  };
+
+  // Magnetic Button Hover helper
+  const handleMagneticMove = (e: React.MouseEvent<HTMLElement>, intensity = 0.2) => {
+    const btn = e.currentTarget;
+    const rect = btn.getBoundingClientRect();
+    const x = e.clientX - rect.left - rect.width / 2;
+    const y = e.clientY - rect.top - rect.height / 2;
+    gsap.to(btn, { x: x * intensity, y: y * intensity, duration: 0.2, ease: "power2.out" });
+  };
+
+  const handleMagneticLeave = (e: React.MouseEvent<HTMLElement>) => {
+    gsap.to(e.currentTarget, { x: 0, y: 0, duration: 0.5, ease: "elastic.out(1, 0.4)" });
+  };
 
   const faqs = [
     {
@@ -226,67 +441,19 @@ export default function LandingPage() {
     <div style={{ background: "#ffffff", color: "#0f172a", minHeight: "100vh", fontFamily: "Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif", overflowX: "hidden" }}>
 
       {/* ── NAVIGATION ─────────────────────────── */}
-      <header style={{
-        position: "fixed", top: 0, left: 0, right: 0, zIndex: 100,
-        padding: "0 48px", height: 68,
-        display: "flex", alignItems: "center", justifyContent: "space-between",
-        background: scrolled ? "rgba(255, 255, 255, 0.95)" : "rgba(255, 255, 255, 0.8)",
-        borderBottom: "1px solid #e2e8f0",
-        backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)",
-        transition: "all 0.2s ease",
-      }}>
-        <Link href="/" style={{ display: "flex", alignItems: "center", gap: 12, textDecoration: "none" }}>
-          <Image src="/main-logo.png" alt="CodeVault" width={54} height={54} style={{ borderRadius: 10 }} />
-          <span style={{ fontSize: 18, fontWeight: 800, letterSpacing: "-0.03em", color: "#0f172a" }}>
-            CodeVault
-          </span>
-        </Link>
-
-        <nav style={{ display: "flex", gap: 32, fontSize: 14, fontWeight: 500, color: "#475569" }}>
-          {[{ label: "Features", href: "#features" }, { label: "Architecture", href: "#architecture" }, { label: "How It Works", href: "#how-it-works" }, { label: "Download", href: "/download" }, { label: "Docs", href: "/docs" }, { label: "FAQ", href: "#faq" }].map((item) => (
-            <a key={item.label} href={item.href} style={{ textDecoration: "none", color: "#475569", transition: "color 0.15s" }}
-              onMouseEnter={e => (e.currentTarget.style.color = "#0f172a")}
-              onMouseLeave={e => (e.currentTarget.style.color = "#475569")}>
-              {item.label}
-            </a>
-          ))}
-        </nav>
-
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          {isAuthenticated ? (
-            <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
-              <Link href="/dashboard" style={{
-                background: "#635bff", color: "#ffffff", padding: "8px 18px", borderRadius: 8,
-                fontSize: 13, fontWeight: 600, textDecoration: "none",
-                display: "flex", alignItems: "center", gap: 6
-              }}>
-                Dashboard <ArrowRight size={14} />
-              </Link>
-            </motion.div>
-          ) : (
-            <motion.button onClick={go} whileHover={{ scale: 1.03, backgroundColor: "#4f46e5" }} whileTap={{ scale: 0.97 }} style={{
-              background: "#635bff", color: "#ffffff", padding: "8px 20px", borderRadius: 8,
-              fontSize: 13, fontWeight: 600, border: "none", cursor: "pointer",
-              display: "flex", alignItems: "center", gap: 6, transition: "background 0.15s"
-            }}>
-              Get Started Free <ArrowRight size={14} />
-            </motion.button>
-          )}
-        </div>
-      </header>
+      <PublicNavbar />
 
       {/* ── HERO SECTION ───────────────────────── */}
-      <section style={{ paddingTop: 148, paddingBottom: 88, paddingLeft: 48, paddingRight: 48, textAlign: "center", position: "relative", background: "#ffffff" }}>
+      <section className="responsive-hero-section" style={{ paddingTop: 148, paddingBottom: 88, paddingLeft: 48, paddingRight: 48, textAlign: "center", position: "relative", background: "#ffffff", perspective: 1000 }}>
 
-        {/* Animated Background Breathing Glow */}
-        <motion.div
-          animate={{ scale: [1, 1.15, 1], opacity: [0.25, 0.45, 0.25] }}
-          transition={{ repeat: Infinity, duration: 7, ease: "easeInOut" }}
+        {/* GSAP Animated Background Ambient Glow */}
+        <div
+          ref={heroGlowRef}
           style={{
             position: "absolute", top: "25%", left: "50%", transform: "translate(-50%, -50%)",
-            width: 700, height: 450, borderRadius: "50%",
-            background: "radial-gradient(circle, rgba(99, 91, 255, 0.2) 0%, rgba(168, 85, 247, 0.08) 50%, transparent 75%)",
-            pointerEvents: "none", zIndex: 0
+            width: 720, height: 460, borderRadius: "50%",
+            background: "radial-gradient(circle, rgba(99, 91, 255, 0.22) 0%, rgba(168, 85, 247, 0.09) 50%, transparent 75%)",
+            pointerEvents: "none", zIndex: 0, filter: "blur(20px)"
           }}
         />
 
@@ -298,111 +465,114 @@ export default function LandingPage() {
         }} />
 
         <div style={{ maxWidth: 840, margin: "0 auto", position: "relative", zIndex: 1 }}>
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+
+          {/* Pill Badge with Pulsing Light */}
+          <div
+            ref={heroBadgeRef}
+            style={{
+              display: "inline-flex", alignItems: "center", gap: 8,
+              background: "#f8fafc", border: "1px solid #e2e8f0",
+              borderRadius: 100, padding: "6px 16px", fontSize: 12, fontWeight: 600, color: "#475569",
+              marginBottom: 32, boxShadow: "0 2px 8px rgba(99,91,255,0.06)"
+            }}
           >
+            <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#635bff", display: "inline-block", boxShadow: "0 0 8px #635bff" }} />
+            <span>Developer Tool · Chrome Extension Manifest V3</span>
+            <Sparkles size={13} style={{ color: "#a855f7" }} />
+          </div>
 
-            {/* Pill Badge with Pulsing Light */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.1, duration: 0.4 }}
-              style={{
-                display: "inline-flex", alignItems: "center", gap: 8,
-                background: "#f8fafc", border: "1px solid #e2e8f0",
-                borderRadius: 100, padding: "6px 16px", fontSize: 12, fontWeight: 600, color: "#475569",
-                marginBottom: 32, boxShadow: "0 2px 8px rgba(99,91,255,0.06)"
-              }}
-            >
-              <motion.span
-                animate={{ scale: [1, 1.4, 1], opacity: [0.7, 1, 0.7] }}
-                transition={{ repeat: Infinity, duration: 1.8, ease: "easeInOut" }}
-                style={{ width: 7, height: 7, borderRadius: "50%", background: "#635bff", display: "inline-block" }}
-              />
-              <span>Developer Tool · Chrome Extension Manifest V3</span>
-              <Sparkles size={13} style={{ color: "#a855f7" }} />
-            </motion.div>
-
-            {/* H1 Headline with Vibrant Gradient Wordmark */}
-            <h1 style={{
+          {/* H1 Headline with Vibrant Gradient Wordmark */}
+          <h1
+            ref={heroHeadlineRef}
+            style={{
               fontSize: "clamp(40px, 5.5vw, 64px)", fontWeight: 800,
               letterSpacing: "-0.04em", lineHeight: 1.1, margin: "0 0 24px", color: "#0f172a"
+            }}
+          >
+            Automate your LeetCode<br />
+            <span style={{
+              background: "linear-gradient(135deg, #635bff 0%, #a855f7 100%)",
+              WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent"
             }}>
-              Automate your LeetCode<br />
-              <span style={{
-                background: "linear-gradient(135deg, #635bff 0%, #a855f7 100%)",
-                WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent"
-              }}>
-                repository on GitHub.
-              </span>
-            </h1>
+              repository on GitHub.
+            </span>
+          </h1>
 
-            {/* Subtitle */}
-            <p style={{
+          {/* Subtitle */}
+          <p
+            ref={heroSubRef}
+            style={{
               fontSize: "clamp(16px, 1.8vw, 18px)", color: "#475569",
               maxWidth: 620, margin: "0 auto 40px", lineHeight: 1.6, fontWeight: 400
-            }}>
-              CodeVault bridges LeetCode and GitHub in real time. Accepted submissions are structured, documented, and committed to your personal repository automatically.
-            </p>
+            }}
+          >
+            CodeVault bridges LeetCode and GitHub in real time. Accepted submissions are structured, documented, and committed to your personal repository automatically.
+          </p>
 
-            {/* CTA Buttons with Spring Scale Effect */}
-            <div style={{ display: "flex", justifyContent: "center", gap: 14, flexWrap: "wrap", alignItems: "center" }}>
-              <motion.button
-                onClick={go}
-                whileHover={{ scale: 1.04, backgroundColor: "#4f46e5", boxShadow: "0 6px 20px rgba(99,91,255,0.35)" }}
-                whileTap={{ scale: 0.96 }}
+          {/* CTA Buttons with GSAP Magnetic Effect */}
+          <div ref={heroCtaRef} style={{ display: "flex", justifyContent: "center", gap: 14, flexWrap: "wrap", alignItems: "center" }}>
+            <button
+              onClick={go}
+              onMouseMove={(e) => handleMagneticMove(e, 0.2)}
+              onMouseLeave={handleMagneticLeave}
+              style={{
+                background: "#635bff", color: "#ffffff", padding: "14px 30px", fontSize: 15, fontWeight: 600,
+                borderRadius: 10, border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: 8,
+                transition: "background 0.15s ease, box-shadow 0.2s", boxShadow: "0 4px 16px rgba(99,91,255,0.3)"
+              }}
+              onMouseEnter={e => { e.currentTarget.style.background = "#4f46e5"; }}
+            >
+              Start Free Account <ArrowRight size={16} />
+            </button>
+
+            <div>
+              <Link
+                href="/download"
+                onMouseMove={(e) => handleMagneticMove(e, 0.2)}
+                onMouseLeave={handleMagneticLeave}
                 style={{
-                  background: "#635bff", color: "#ffffff", padding: "14px 30px", fontSize: 15, fontWeight: 600,
-                  borderRadius: 10, border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: 8,
-                  transition: "background 0.15s ease", boxShadow: "0 2px 8px rgba(99,91,255,0.25)"
-                }}
-              >
-                Start Free Account <ArrowRight size={16} />
-              </motion.button>
-
-              <motion.div whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}>
-                <Link href="/download" style={{
                   background: "#ffffff", color: "#0f172a", padding: "14px 26px", fontSize: 15, fontWeight: 600,
                   borderRadius: 10, border: "1px solid #cbd5e1",
                   display: "flex", alignItems: "center", gap: 8, textDecoration: "none",
-                  transition: "all 0.15s ease"
-                }}>
-                  <Download size={16} /> Download Extension
-                </Link>
-              </motion.div>
+                  transition: "border-color 0.15s, background 0.15s"
+                }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = "#635bff"; }}
+              >
+                <Download size={16} /> Download Extension
+              </Link>
             </div>
+          </div>
 
-            {/* Trust Badges */}
-            <div style={{ marginTop: 40, display: "flex", justifyContent: "center", gap: 32, flexWrap: "wrap" }}>
-              {[
-                { label: "Free for individual developers" },
-                { label: "Zero source code on our servers" },
-                { label: "10+ programming languages" },
-              ].map((item, i) => (
-                <div key={i} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, color: "#64748b", fontWeight: 500 }}>
-                  <CheckCircle2 size={14} style={{ color: "#635bff" }} />
-                  <span>{item.label}</span>
-                </div>
-              ))}
-            </div>
+          {/* Trust Badges */}
+          <div ref={heroTrustRef} style={{ marginTop: 40, display: "flex", justifyContent: "center", gap: 32, flexWrap: "wrap" }}>
+            {[
+              { label: "Free for individual developers" },
+              { label: "Zero source code on our servers" },
+              { label: "10+ programming languages" },
+            ].map((item, i) => (
+              <div key={i} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, color: "#64748b", fontWeight: 500 }}>
+                <CheckCircle2 size={14} style={{ color: "#635bff" }} />
+                <span>{item.label}</span>
+              </div>
+            ))}
+          </div>
 
-          </motion.div>
         </div>
 
-        {/* ── IDE SHOWCASE WITH ANIMATED FLOATING CONTAINER ── */}
-        <motion.div
-          initial={{ opacity: 0, y: 40 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.25, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-          whileHover={{ y: -6, boxShadow: "0 24px 60px -12px rgba(99, 91, 255, 0.18)" }}
-          style={{ maxWidth: 960, margin: "64px auto 0", position: "relative", zIndex: 1 }}
+        {/* ── IDE SHOWCASE WITH GSAP 3D TILT & PARALLAX ── */}
+        <div
+          ref={ideShowcaseRef}
+          onMouseMove={handleIdeMouseMove}
+          onMouseLeave={handleIdeMouseLeave}
+          style={{
+            maxWidth: 960, margin: "64px auto 0", position: "relative", zIndex: 1,
+            transformStyle: "preserve-3d", transition: "box-shadow 0.3s"
+          }}
         >
           <div style={{
             background: "#ffffff", border: "1.5px solid #e2e8f0",
-            borderRadius: 16, boxShadow: "0 16px 40px -10px rgba(99, 91, 255, 0.08), 0 4px 12px rgba(15, 23, 42, 0.04)",
-            overflow: "hidden", textAlign: "left", transition: "box-shadow 0.2s"
+            borderRadius: 16, boxShadow: "0 20px 50px -10px rgba(99, 91, 255, 0.12), 0 4px 16px rgba(15, 23, 42, 0.04)",
+            overflow: "hidden", textAlign: "left"
           }}>
             {/* Window Topbar */}
             <div style={{ padding: "10px 20px", background: "#f8fafc", borderBottom: "1px solid #e2e8f0", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
@@ -435,20 +605,14 @@ export default function LandingPage() {
             </div>
 
             {/* Split Code View */}
-            <div style={{ display: "grid", gridTemplateColumns: "1.4fr 1fr", background: "#fafbfe" }}>
-              {/* Code Panel with Animated Tab Switch */}
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={activeLang}
-                  initial={{ opacity: 0, y: 6 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -6 }}
-                  transition={{ duration: 0.18 }}
-                  style={{ padding: "24px", fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace", fontSize: 13, color: "#0f172a", lineHeight: 1.6, borderRight: "1px solid #e2e8f0", minHeight: 220, background: "#ffffff" }}
-                >
-                  {sampleSample.code}
-                </motion.div>
-              </AnimatePresence>
+            <div className="responsive-grid-1col" style={{ display: "grid", gridTemplateColumns: "1.4fr 1fr", background: "#fafbfe" }}>
+              {/* Code Panel with GSAP Animated Tab Switch */}
+              <div
+                ref={codePanelRef}
+                style={{ padding: "24px", fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace", fontSize: 13, color: "#0f172a", lineHeight: 1.6, borderRight: "1px solid #e2e8f0", minHeight: 220, background: "#ffffff" }}
+              >
+                {sampleSample.code}
+              </div>
 
               {/* Commit Meta Panel */}
               <div style={{ padding: "24px", background: "#f4f3ff", color: "#0f172a", display: "flex", flexDirection: "column", justifyContent: "space-between", borderLeft: "1px solid #ede9fe" }}>
@@ -478,12 +642,12 @@ export default function LandingPage() {
               </div>
             </div>
           </div>
-        </motion.div>
+        </div>
       </section>
 
       {/* ── METRICS STRIP ───────────────────────── */}
-      <section style={{ padding: "48px", background: "#f8fafc", borderTop: "1px solid #e2e8f0", borderBottom: "1px solid #e2e8f0" }}>
-        <div style={{ maxWidth: 960, margin: "0 auto", display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 32, textAlign: "center" }}>
+      <section className="responsive-hero-section" style={{ padding: "48px", background: "#f8fafc", borderTop: "1px solid #e2e8f0", borderBottom: "1px solid #e2e8f0" }}>
+        <div className="responsive-grid-2col" style={{ maxWidth: 960, margin: "0 auto", display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 32, textAlign: "center" }}>
           {[
             { val: 2400, suffix: "+", label: "Active Developers" },
             { val: 50, suffix: "K+", label: "Commits Synced" },
@@ -500,16 +664,10 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── FEATURES GRID WITH SPRING HOVER ANIMATIONS ─────── */}
-      <section id="features" style={{ padding: "96px 48px", background: "#ffffff" }}>
+      {/* ── FEATURES GRID WITH GSAP SCROLL REVEAL ─────── */}
+      <section id="features" className="responsive-hero-section" style={{ padding: "96px 48px", background: "#ffffff" }}>
         <div style={{ maxWidth: 1100, margin: "0 auto" }}>
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5 }}
-            style={{ textAlign: "center", marginBottom: 64 }}
-          >
+          <div style={{ textAlign: "center", marginBottom: 64 }}>
             <div style={{ fontSize: 12, fontWeight: 700, color: "#635bff", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 12 }}>
               Capabilities
             </div>
@@ -519,47 +677,40 @@ export default function LandingPage() {
             <p style={{ fontSize: 16, color: "#64748b", maxWidth: 520, margin: "0 auto", lineHeight: 1.6 }}>
               A robust synchronization platform for software engineers who value clean revision histories and data ownership.
             </p>
-          </motion.div>
+          </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 24 }}>
+          <div
+            ref={featuresGridRef}
+            className="responsive-grid-1col"
+            style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 24 }}
+          >
             {features.map((f, i) => (
-              <motion.div
+              <div
                 key={i}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.4, delay: i * 0.08 }}
-                whileHover={{ y: -6, borderColor: "#635bff", boxShadow: "0 14px 32px -6px rgba(99, 91, 255, 0.12)" }}
+                onMouseMove={(e) => handleMagneticMove(e, 0.08)}
+                onMouseLeave={handleMagneticLeave}
                 style={{
                   padding: "32px 28px", borderRadius: 12, background: "#ffffff",
-                  border: "1px solid #e2e8f0", transition: "all 0.15s ease", cursor: "default"
+                  border: "1px solid #e2e8f0", transition: "border-color 0.2s, box-shadow 0.2s", cursor: "default"
                 }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = "#635bff"; e.currentTarget.style.boxShadow = "0 14px 32px -6px rgba(99, 91, 255, 0.12)"; }}
               >
-                <motion.div
-                  whileHover={{ scale: 1.1, rotate: 6 }}
-                  transition={{ type: "spring", stiffness: 400, damping: 17 }}
-                  style={{ width: 42, height: 42, borderRadius: 8, background: "#f4f3ff", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 20 }}
-                >
+                <div style={{ width: 42, height: 42, borderRadius: 8, background: "#f4f3ff", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 20 }}>
                   <f.icon size={20} style={{ color: "#635bff" }} />
-                </motion.div>
+                </div>
                 <h3 style={{ fontSize: 16, fontWeight: 700, margin: "0 0 10px", color: "#0f172a" }}>{f.title}</h3>
                 <p style={{ fontSize: 14, color: "#64748b", margin: 0, lineHeight: 1.6 }}>{f.desc}</p>
-              </motion.div>
+              </div>
             ))}
           </div>
         </div>
       </section>
 
       {/* ── SECURITY & ARCHITECTURE SECTION ────── */}
-      <section id="architecture" style={{ padding: "96px 48px", background: "#f8fafc", borderTop: "1px solid #e2e8f0", borderBottom: "1px solid #e2e8f0" }}>
+      <section id="architecture" className="responsive-hero-section" style={{ padding: "96px 48px", background: "#f8fafc", borderTop: "1px solid #e2e8f0", borderBottom: "1px solid #e2e8f0" }}>
         <div style={{ maxWidth: 1100, margin: "0 auto" }}>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 48, alignItems: "center" }}>
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5 }}
-            >
+          <div className="responsive-grid-1col" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 48, alignItems: "center" }}>
+            <div ref={architectureRef}>
               <div style={{ fontSize: 12, fontWeight: 700, color: "#635bff", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 12 }}>
                 Trust &amp; Security Architecture
               </div>
@@ -575,7 +726,7 @@ export default function LandingPage() {
                   { icon: Cpu, title: "Local Offline Queue", desc: "If your network drops, solutions are enqueued locally in chrome.storage until connection returns." },
                   { icon: Database, title: "Zero Password Exposure", desc: "Extension inherits web authentication via Supabase Auth — no raw passwords inside extension." },
                 ].map((sec, idx) => (
-                  <motion.div key={idx} whileHover={{ x: 4 }} style={{ display: "flex", gap: 14, alignItems: "flex-start", transition: "transform 0.15s" }}>
+                  <div key={idx} style={{ display: "flex", gap: 14, alignItems: "flex-start" }}>
                     <div style={{ width: 36, height: 36, borderRadius: 8, background: "#f4f3ff", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                       <sec.icon size={18} style={{ color: "#635bff" }} />
                     </div>
@@ -583,19 +734,17 @@ export default function LandingPage() {
                       <div style={{ fontSize: 15, fontWeight: 700, color: "#0f172a" }}>{sec.title}</div>
                       <div style={{ fontSize: 13, color: "#64748b", lineHeight: 1.5, marginTop: 2 }}>{sec.desc}</div>
                     </div>
-                  </motion.div>
+                  </div>
                 ))}
               </div>
-            </motion.div>
+            </div>
 
-            {/* Visual Vault Directory Tree Card with Animated Hover Lift */}
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5 }}
-              whileHover={{ y: -6, boxShadow: "0 16px 36px rgba(99, 91, 255, 0.12)" }}
-              style={{ background: "#ffffff", border: "1px solid #cbd5e1", borderRadius: 16, padding: "28px", boxShadow: "0 10px 30px rgba(15, 23, 42, 0.05)", transition: "all 0.2s" }}
+            {/* Visual Vault Directory Tree Card */}
+            <div
+              ref={directoryTreeRef}
+              onMouseMove={(e) => handleMagneticMove(e, 0.08)}
+              onMouseLeave={handleMagneticLeave}
+              style={{ background: "#ffffff", border: "1px solid #cbd5e1", borderRadius: 16, padding: "28px", boxShadow: "0 10px 30px rgba(15, 23, 42, 0.05)", transition: "border-color 0.2s" }}
             >
               <div style={{ fontSize: 12, fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 16 }}>
                 Automated Repository Directory Layout
@@ -613,21 +762,15 @@ export default function LandingPage() {
                 <div style={{ paddingLeft: 18, color: "#7c3aed", fontWeight: 700 }}>├── 📄 stats.json</div>
                 <div style={{ paddingLeft: 18, color: "#7c3aed", fontWeight: 700 }}>└── 📄 README.md</div>
               </div>
-            </motion.div>
+            </div>
           </div>
         </div>
       </section>
 
       {/* ── HOW IT WORKS ───────────────────────── */}
-      <section id="how-it-works" style={{ padding: "96px 48px", background: "#ffffff" }}>
+      <section id="how-it-works" className="responsive-hero-section" style={{ padding: "96px 48px", background: "#ffffff" }}>
         <div style={{ maxWidth: 1040, margin: "0 auto" }}>
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5 }}
-            style={{ textAlign: "center", marginBottom: 64 }}
-          >
+          <div style={{ textAlign: "center", marginBottom: 64 }}>
             <div style={{ fontSize: 12, fontWeight: 700, color: "#635bff", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 12 }}>
               Integration Workflow
             </div>
@@ -637,21 +780,23 @@ export default function LandingPage() {
             <p style={{ fontSize: 16, color: "#64748b", maxWidth: 480, margin: "0 auto", lineHeight: 1.6 }}>
               Zero manual file exports. Seamless background pipeline.
             </p>
-          </motion.div>
+          </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16 }}>
+          <div
+            ref={stepsGridRef}
+            className="responsive-grid-1col"
+            style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16 }}
+          >
             {steps.map((s, i) => (
-              <motion.div
+              <div
                 key={i}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.4, delay: i * 0.1 }}
-                whileHover={{ y: -6, borderColor: "#635bff" }}
+                onMouseMove={(e) => handleMagneticMove(e, 0.08)}
+                onMouseLeave={handleMagneticLeave}
                 style={{
                   padding: "32px 24px", background: "#ffffff", border: "1px solid #e2e8f0",
-                  borderRadius: 12, transition: "all 0.15s ease"
+                  borderRadius: 12, transition: "border-color 0.2s, box-shadow 0.2s"
                 }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = "#635bff"; e.currentTarget.style.boxShadow = "0 8px 24px rgba(99,91,255,0.08)"; }}
               >
                 <div style={{
                   fontSize: 12, fontWeight: 800, color: "#635bff", background: "#f4f3ff",
@@ -661,44 +806,40 @@ export default function LandingPage() {
                 </div>
                 <h3 style={{ fontSize: 15, fontWeight: 700, margin: "0 0 10px", color: "#0f172a" }}>{s.title}</h3>
                 <p style={{ fontSize: 13, color: "#64748b", margin: 0, lineHeight: 1.6 }}>{s.desc}</p>
-              </motion.div>
+              </div>
             ))}
           </div>
 
           <div style={{ textAlign: "center", marginTop: 48 }}>
-            <motion.button
+            <button
               onClick={go}
-              whileHover={{ scale: 1.04, backgroundColor: "#4f46e5", boxShadow: "0 6px 20px rgba(99,91,255,0.35)" }}
-              whileTap={{ scale: 0.96 }}
+              onMouseMove={(e) => handleMagneticMove(e, 0.2)}
+              onMouseLeave={handleMagneticLeave}
               style={{
                 background: "#635bff", color: "#ffffff", padding: "12px 28px", fontSize: 14, fontWeight: 600,
                 borderRadius: 8, border: "none", cursor: "pointer", display: "inline-flex",
-                alignItems: "center", gap: 8, transition: "background 0.15s"
+                alignItems: "center", gap: 8, transition: "background 0.15s, box-shadow 0.2s",
+                boxShadow: "0 4px 16px rgba(99,91,255,0.25)"
               }}
+              onMouseEnter={e => { e.currentTarget.style.background = "#4f46e5"; }}
             >
               Get Started Free <ArrowRight size={16} />
-            </motion.button>
+            </button>
           </div>
         </div>
       </section>
 
       {/* ── FAQ SECTION ────────────────────────── */}
-      <section id="faq" style={{ padding: "96px 48px", background: "#f8fafc", borderTop: "1px solid #e2e8f0", borderBottom: "1px solid #e2e8f0" }}>
+      <section id="faq" className="responsive-hero-section" style={{ padding: "96px 48px", background: "#f8fafc", borderTop: "1px solid #e2e8f0", borderBottom: "1px solid #e2e8f0" }}>
         <div style={{ maxWidth: 760, margin: "0 auto" }}>
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5 }}
-            style={{ textAlign: "center", marginBottom: 64 }}
-          >
+          <div style={{ textAlign: "center", marginBottom: 64 }}>
             <div style={{ fontSize: 12, fontWeight: 700, color: "#635bff", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 12 }}>
               Questions &amp; Answers
             </div>
             <h2 style={{ fontSize: "clamp(28px, 3.5vw, 40px)", fontWeight: 800, letterSpacing: "-0.03em", color: "#0f172a", margin: 0 }}>
               Frequently Asked Questions
             </h2>
-          </motion.div>
+          </div>
 
           <div style={{ display: "flex", flexDirection: "column" }}>
             {faqs.map((faq, idx) => (
@@ -722,13 +863,17 @@ export default function LandingPage() {
           </div>
 
           <div style={{ textAlign: "center", marginTop: 44 }}>
-            <Link href="/faq" style={{
-              display: "inline-flex", alignItems: "center", gap: 6, fontSize: 13, fontWeight: 600,
-              color: "#635bff", textDecoration: "none", padding: "8px 16px", border: "1px solid #e2e8f0",
-              borderRadius: 8, background: "#ffffff", transition: "all 0.15s"
-            }}
+            <Link
+              href="/faq"
+              onMouseMove={(e) => handleMagneticMove(e, 0.15)}
+              style={{
+                display: "inline-flex", alignItems: "center", gap: 6, fontSize: 13, fontWeight: 600,
+                color: "#635bff", textDecoration: "none", padding: "8px 16px", border: "1px solid #e2e8f0",
+                borderRadius: 8, background: "#ffffff", transition: "border-color 0.15s"
+              }}
               onMouseEnter={e => (e.currentTarget.style.borderColor = "#cbd5e1")}
-              onMouseLeave={e => (e.currentTarget.style.borderColor = "#e2e8f0")}>
+              onMouseLeave={e => { handleMagneticLeave(e); e.currentTarget.style.borderColor = "#e2e8f0"; }}
+            >
               View All FAQs <ArrowRight size={14} />
             </Link>
           </div>
@@ -736,9 +881,9 @@ export default function LandingPage() {
       </section>
 
       {/* ── ENTERPRISE FOOTER ──────────────────── */}
-      <footer style={{ background: "#0f172a", color: "#f8fafc", padding: "72px 48px 40px" }}>
+      <footer className="responsive-hero-section" style={{ background: "#0f172a", color: "#f8fafc", padding: "72px 48px 40px" }}>
         <div style={{ maxWidth: 1100, margin: "0 auto" }}>
-          <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr", gap: 48, marginBottom: 56 }}>
+          <div className="responsive-grid-1col" style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr", gap: 48, marginBottom: 56 }}>
             <div>
               <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
                 <Image src="/main-logo.png" alt="CodeVault" width={48} height={48} style={{ borderRadius: 10 }} />

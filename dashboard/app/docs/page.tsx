@@ -1,5 +1,7 @@
 "use client";
 
+export const dynamic = "force-dynamic";
+
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
@@ -9,6 +11,7 @@ import {
   Database, Settings, BookOpen, Terminal, ChevronRight,
   FileText, Globe, Lock, Package, Puzzle,
 } from "lucide-react";
+import PublicNavbar from "../../components/PublicNavbar";
 
 const V = "#635bff";
 const VS = "#f4f3ff";
@@ -36,7 +39,7 @@ function Code({ children }: { children: string }) {
 
 function Block({ children }: { children: React.ReactNode }) {
   return (
-    <pre style={{ background: "#0f172a", borderRadius: 14, padding: "20px 24px", fontSize: 13, color: "#e2e8f0", fontFamily: "ui-monospace, monospace", lineHeight: 1.7, overflowX: "auto", margin: "20px 0" }}>
+    <pre className="responsive-code-block" style={{ background: "#0f172a", borderRadius: 14, padding: "20px 24px", fontSize: 13, color: "#e2e8f0", fontFamily: "ui-monospace, monospace", lineHeight: 1.7, overflowX: "auto", margin: "20px 0", maxWidth: "100%" }}>
       {children}
     </pre>
   );
@@ -62,29 +65,14 @@ export default function DocsPage() {
     <div style={{ background: "#fff", color: "#0f172a", minHeight: "100vh", fontFamily: "Inter, ui-sans-serif, system-ui, sans-serif" }}>
 
       {/* ── NAV ── */}
-      <header style={{ position: "sticky", top: 0, zIndex: 50, borderBottom: "1px solid #f1f5f9", background: "rgba(255,255,255,0.97)", backdropFilter: "blur(16px)", padding: "0 40px", height: 64, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-        <Link href="/" style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none" }}>
-          <Image src="/main-logo.png" alt="CodeVault" width={26} height={26} style={{ borderRadius: 7 }} />
-          <span style={{ fontSize: 16, fontWeight: 800, letterSpacing: "-0.04em", color: "#0f172a" }}>CodeVault</span>
-          <span style={{ fontSize: 13, color: "#94a3b8", fontWeight: 400, marginLeft: 4 }}>/ Docs</span>
-        </Link>
-        <div style={{ display: "flex", gap: 20, fontSize: 13, fontWeight: 500, color: "#64748b" }}>
-          <Link href="/download" style={{ textDecoration: "none", color: "inherit" }}>Download</Link>
-          <Link href="/faq" style={{ textDecoration: "none", color: "inherit" }}>FAQ</Link>
-        </div>
-        <Link href="/" style={{ display: "flex", alignItems: "center", gap: 7, fontSize: 13, fontWeight: 600, color: "#64748b", textDecoration: "none", padding: "8px 14px", border: "1px solid #e2e8f0", borderRadius: 9 }}
-          onMouseEnter={e => { e.currentTarget.style.borderColor = VB; e.currentTarget.style.color = V; }}
-          onMouseLeave={e => { e.currentTarget.style.borderColor = "#e2e8f0"; e.currentTarget.style.color = "#64748b"; }}>
-          <ArrowLeft size={13} /> Back to Home
-        </Link>
-      </header>
+      <PublicNavbar />
 
-      <div style={{ display: "flex", maxWidth: 1280, margin: "0 auto" }}>
+      <div className="responsive-sidebar-layout" style={{ display: "flex", maxWidth: 1280, margin: "0 auto", paddingTop: 68 }}>
 
         {/* ── SIDEBAR ── */}
-        <aside style={{ width: 260, flexShrink: 0, padding: "40px 0 40px 40px", position: "sticky", top: 64, height: "calc(100vh - 64px)", overflowY: "auto" }}>
+        <aside className="responsive-sidebar" style={{ width: 260, flexShrink: 0, padding: "40px 0 40px 40px", position: "sticky", top: 68, height: "calc(100vh - 68px)", overflowY: "auto" }}>
           <div style={{ fontSize: 11, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 16 }}>Documentation</div>
-          <nav style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+          <nav style={{ display: "flex", flexDirection: "column", gap: 2, flexWrap: "wrap" }}>
             {sections.map(sec => (
               <button key={sec.id} onClick={() => setActive(sec.id)} style={{
                 display: "flex", alignItems: "center", gap: 10, padding: "9px 12px",
@@ -112,7 +100,7 @@ export default function DocsPage() {
         </aside>
 
         {/* ── CONTENT ── */}
-        <main style={{ flex: 1, padding: "48px 56px", maxWidth: 780, minHeight: "calc(100vh - 64px)" }}>
+        <main className="responsive-main-content" style={{ flex: 1, padding: "48px 56px", maxWidth: 780, minHeight: "calc(100vh - 64px)" }}>
           <motion.div key={active} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.22 }}>
 
             {active === "overview" && (
@@ -124,7 +112,7 @@ export default function DocsPage() {
                 <Divider />
                 <H3>What is CodeVault?</H3>
                 <P>CodeVault consists of two parts working together:</P>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, margin: "16px 0 24px" }}>
+                <div className="responsive-grid-1col" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, margin: "16px 0 24px" }}>
                   {[
                     { icon: Globe, title: "Web Platform", desc: "Handles authentication, settings, repository binding, and analytics visualisation.", color: V },
                     { icon: Package, title: "Chrome Extension", desc: "Listens for accepted LeetCode submissions and triggers commits to your GitHub repository.", color: "#059669" },

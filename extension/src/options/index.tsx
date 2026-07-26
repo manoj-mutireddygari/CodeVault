@@ -13,10 +13,10 @@ function Options() {
   useEffect(() => {
     vaultStorage.getSettings().then(setSettings);
     vaultStorage.getLastUpload().then(setLastUpload);
-    vaultStorage.getSession().then(setSession);
+    vaultStorage.ensureValidSession().then(setSession);
   }, []);
 
-  const authenticated = Boolean(session && session.expiresAt > Date.now());
+  const authenticated = Boolean(session);
   const repoName = settings?.owner && settings?.repository ? `${settings.owner}/${settings.repository}` : "No repository mapped";
 
   const handleLogout = async () => {

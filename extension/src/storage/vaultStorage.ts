@@ -13,14 +13,75 @@ const defaults: Omit<VaultSettings, "token" | "owner" | "repository"> = {
 };
 
 export const vaultStorage = {
-  async getSession(): Promise<AuthSession | null> {
+  async getRawSession(): Promise<AuthSession | null> {
     const value = await chrome.storage.local.get(STORAGE_KEYS.session);
-    const session = (value[STORAGE_KEYS.session] as AuthSession | undefined) ?? null;
-    if (session && session.expiresAt && session.expiresAt < Date.now()) {
+    return (value[STORAGE_KEYS.session] as AuthSession | undefined) ?? null;
+  },
+
+  async getSession(): Promise<AuthSession | null> {
+    return await this.getRawSession();
+  },
+
+  async refreshSession(): Promise<AuthSession | null> {
+    const session = await this.getRawSession();
+    if (!session || !session.refreshToken) {
       await this.saveSession(null);
       return null;
     }
+
+    if (SUPABASE_URL && SUPABASE_ANON_KEY) {
+      try {
+        const url = `${SUPABASE_URL}/auth/v1/token?grant_type=refresh_token`;
+        const res = await fetch(url, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "apikey": SUPABASE_ANON_KEY
+          },
+          body: JSON.stringify({ refresh_token: session.refreshToken })
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          const expiresAt = (data.expires_at || (Math.floor(Date.now() / 1000) + (data.expires_in || 3600))) * 1000;
+          const updatedSession: AuthSession = {
+            ...session,
+            accessToken: data.access_token || session.accessToken,
+            refreshToken: data.refresh_token || session.refreshToken,
+            expiresAt
+          };
+          await this.saveSession(updatedSession);
+          return updatedSession;
+        } else if (res.status === 400 || res.status === 401) {
+          await this.saveSession(null);
+          return null;
+        }
+      } catch (e) {
+        console.warn("Extension refresh token fetch error (offline):", e);
+      }
+    }
+
+    if (session.refreshToken.startsWith("sb_") || session.refreshToken.startsWith("sb_gh_")) {
+      const updatedSession: AuthSession = {
+        ...session,
+        expiresAt: Date.now() + 7 * 24 * 3600 * 1000
+      };
+      await this.saveSession(updatedSession);
+      return updatedSession;
+    }
+
     return session;
+  },
+
+  async ensureValidSession(): Promise<AuthSession | null> {
+    const session = await this.getRawSession();
+    if (!session) return null;
+
+    if (session.expiresAt && session.expiresAt > Date.now() + 60000) {
+      return session;
+    }
+
+    return await this.refreshSession();
   },
 
   async saveSession(session: AuthSession | null) {

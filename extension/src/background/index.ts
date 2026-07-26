@@ -74,10 +74,10 @@ chrome.runtime.onMessage.addListener((message: BackgroundMessage, _sender, sendR
           return { ok: true, message: "Logged out successfully from extension." };
 
         case "GET_HANDSHAKE":
-          const activeSession = await vaultStorage.getSession();
+          const activeSession = await vaultStorage.ensureValidSession();
           const activeRepo = await vaultStorage.getRepository();
           const activeProfile = await vaultStorage.getProfile();
-          const isSessionValid = activeSession && activeSession.expiresAt > Date.now();
+          const isSessionValid = Boolean(activeSession);
           const isUuid = (s?: string) => Boolean(s && (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s) || s.startsWith("usr_") || s.startsWith("gh_usr_")));
           
           let repoOwner = activeRepo ? ((activeRepo as any).owner || (activeRepo as any).repository_owner || activeProfile?.github_username || activeProfile?.username) : null;
@@ -174,8 +174,15 @@ chrome.runtime.onMessage.addListener((message: BackgroundMessage, _sender, sendR
 });
 
 self.addEventListener("online", () => {
+  void vaultStorage.ensureValidSession();
   void drainQueue();
 });
 
-// Run initial queue drain on launch
+chrome.runtime.onStartup?.addListener(() => {
+  void vaultStorage.ensureValidSession();
+  void drainQueue();
+});
+
+// Run initial session check & queue drain on launch
+void vaultStorage.ensureValidSession();
 void drainQueue();

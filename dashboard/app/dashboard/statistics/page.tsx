@@ -1,4 +1,6 @@
 "use client";
+
+export const dynamic = "force-dynamic";
 import {
   PieChart, Pie, Cell, ResponsiveContainer,
   BarChart, Bar, XAxis, YAxis, Tooltip,

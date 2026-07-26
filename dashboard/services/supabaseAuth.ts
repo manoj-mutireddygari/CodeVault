@@ -81,21 +81,110 @@ const generateUUID = () => {
 };
 
 export const supabaseAuth = {
-  // Get active session
-  getSession(): AuthSession | null {
+  // Get active raw session from local storage without auto-deleting expired sessions
+  getRawSession(): AuthSession | null {
     if (typeof window === "undefined") return null;
     try {
       const stored = localStorage.getItem(AUTH_KEY);
       if (!stored) return null;
-      const session = JSON.parse(stored) as AuthSession;
-      if (session.expiresAt && session.expiresAt < Date.now()) {
-        localStorage.removeItem(AUTH_KEY);
-        return null;
-      }
-      return session;
+      return JSON.parse(stored) as AuthSession;
     } catch {
       return null;
     }
+  },
+
+  // Get active session
+  getSession(): AuthSession | null {
+    return this.getRawSession();
+  },
+
+  // Silently refresh expired access token using Supabase refresh token
+  async refreshSession(): Promise<AuthSession | null> {
+    const session = this.getRawSession();
+    if (!session || !session.refreshToken) {
+      this.setSession(null);
+      return null;
+    }
+
+    // Try Supabase JS client refresh first if real supabase is configured
+    if (supabase) {
+      try {
+        const { data, error } = await supabase.auth.refreshSession({ refresh_token: session.refreshToken });
+        if (!error && data?.session) {
+          const updatedSession: AuthSession = {
+            ...session,
+            accessToken: data.session.access_token,
+            refreshToken: data.session.refresh_token,
+            expiresAt: (data.session.expires_at || 0) * 1000 || (Date.now() + 7 * 24 * 3600 * 1000),
+          };
+          this.setSession(updatedSession);
+          return updatedSession;
+        }
+        if (error && (error.status === 400 || error.status === 401 || error.message?.includes("invalid") || error.message?.includes("not found"))) {
+          await this.signOut();
+          return null;
+        }
+      } catch (err) {
+        console.warn("Supabase JS refresh error:", err);
+      }
+    }
+
+    // Fallback: REST API refresh via Supabase Auth Endpoint
+    if (SUPABASE_URL && SUPABASE_ANON_KEY) {
+      try {
+        const url = `${SUPABASE_URL}/auth/v1/token?grant_type=refresh_token`;
+        const res = await fetch(url, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "apikey": SUPABASE_ANON_KEY
+          },
+          body: JSON.stringify({ refresh_token: session.refreshToken })
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          const expiresAt = (data.expires_at || (Math.floor(Date.now() / 1000) + (data.expires_in || 3600))) * 1000;
+          const updatedSession: AuthSession = {
+            ...session,
+            accessToken: data.access_token || session.accessToken,
+            refreshToken: data.refresh_token || session.refreshToken,
+            expiresAt
+          };
+          this.setSession(updatedSession);
+          return updatedSession;
+        } else if (res.status === 400 || res.status === 401) {
+          await this.signOut();
+          return null;
+        }
+      } catch (e) {
+        console.warn("REST API refresh error (offline):", e);
+      }
+    }
+
+    // Dev/mock session fallback or offline retention
+    if (session.refreshToken.startsWith("sb_") || session.refreshToken.startsWith("sb_gh_")) {
+      const updatedSession: AuthSession = {
+        ...session,
+        expiresAt: Date.now() + 7 * 24 * 3600 * 1000
+      };
+      this.setSession(updatedSession);
+      return updatedSession;
+    }
+
+    return session;
+  },
+
+  // Ensure session is valid, silently refreshing if expired
+  async ensureValidSession(): Promise<AuthSession | null> {
+    const session = this.getRawSession();
+    if (!session) return null;
+
+    if (session.expiresAt && session.expiresAt > Date.now() + 60000) {
+      return session;
+    }
+
+    return await this.refreshSession();
   },
 
   // Save session

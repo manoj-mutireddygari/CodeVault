@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useSearchParams } from "next/navigation";
 import { useExtension } from "../../../hooks/useExtension";
 import { usePreferences } from "../../../contexts/PreferencesContext";
 import { supabaseAuth } from "../../../services/supabaseAuth";
@@ -45,45 +46,53 @@ interface SyncLog {
 }
 
 const tabs = [
-  { id: "profile"       as TabId, label: "Profile",      Icon: User      },
-  { id: "github"        as TabId, label: "GitHub",       Icon: GitFork   },
-  { id: "appearance"   as TabId, label: "Appearance",   Icon: Palette   },
-  { id: "notifications" as TabId, label: "Logs",         Icon: BellRing  },
-  { id: "advanced"     as TabId, label: "Advanced",     Icon: Wrench    },
-  { id: "about"        as TabId, label: "About",        Icon: Info      },
+  { id: "profile" as TabId, label: "Profile", Icon: User },
+  { id: "github" as TabId, label: "GitHub", Icon: GitFork },
+  { id: "appearance" as TabId, label: "Appearance", Icon: Palette },
+  { id: "notifications" as TabId, label: "Logs", Icon: BellRing },
+  { id: "advanced" as TabId, label: "Advanced", Icon: Wrench },
+  { id: "about" as TabId, label: "About", Icon: Info },
 ];
 
 export default function SettingsPage() {
   const extension = useExtension();
   const preferences = usePreferences();
+  const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState<TabId>("profile");
+
+  useEffect(() => {
+    const tabParam = searchParams.get("tab") as TabId | null;
+    if (tabParam && tabs.some((t) => t.id === tabParam)) {
+      setActiveTab(tabParam);
+    }
+  }, [searchParams]);
 
   // Profile
   const [fullName, setFullName] = useState("");
-  const [username, setUsername]  = useState("");
-  const [email, setEmail]        = useState("");
+  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [profileSaved, setProfileSaved] = useState(false);
 
   // GitHub
-  const [token, setToken]       = useState("");
-  const [owner, setOwner]       = useState("");
-  const [repo, setRepo]         = useState("");
+  const [token, setToken] = useState("");
+  const [owner, setOwner] = useState("");
+  const [repo, setRepo] = useState("");
   const [autoSync, setAutoSync] = useState(true);
   const [extNotifications, setExtNotifications] = useState(true);
-  const [refreshMinutes, setRefreshMinutes]      = useState(5);
-  const [showToken, setShowToken]                = useState(false);
+  const [refreshMinutes, setRefreshMinutes] = useState(5);
+  const [showToken, setShowToken] = useState(false);
 
-  const [isValidating, setIsValidating]       = useState(false);
+  const [isValidating, setIsValidating] = useState(false);
   const [validationResult, setValidationResult] = useState<{ ok: boolean; message: string } | null>(null);
-  const [isSaving, setIsSaving]               = useState(false);
-  const [saveResult, setSaveResult]           = useState<{ ok: boolean; message: string } | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveResult, setSaveResult] = useState<{ ok: boolean; message: string } | null>(null);
 
   // Logs (from Supabase DB — full persistent history)
-  const [dbLogs, setDbLogs]               = useState<SyncLog[]>([]);
-  const [logsLoading, setLogsLoading]     = useState(false);
-  const [logsError, setLogsError]         = useState<string | null>(null);
-  const [logFilter, setLogFilter]         = useState<"all" | "sync" | "error" | "system">("all");
-  const [logSearch, setLogSearch]         = useState("");
+  const [dbLogs, setDbLogs] = useState<SyncLog[]>([]);
+  const [logsLoading, setLogsLoading] = useState(false);
+  const [logsError, setLogsError] = useState<string | null>(null);
+  const [logFilter, setLogFilter] = useState<"all" | "sync" | "error" | "system">("all");
+  const [logSearch, setLogSearch] = useState("");
   const [isClearingLogs, setIsClearingLogs] = useState(false);
 
   const fetchDbLogs = useCallback(async () => {
@@ -101,7 +110,7 @@ export default function SettingsPage() {
 
 
   // General
-  const [dateFormat, setDateFormat]   = useState("YYYY-MM-DD");
+  const [dateFormat, setDateFormat] = useState("YYYY-MM-DD");
   const [numberFormat, setNumberFormat] = useState("commas");
 
   useEffect(() => {
@@ -115,8 +124,8 @@ export default function SettingsPage() {
 
     if (profile) {
       setFullName(profile.full_name || "");
-      setUsername(profile.username  || "");
-      setEmail(profile.email        || "");
+      setUsername(profile.username || "");
+      setEmail(profile.email || "");
     }
     if (savedToken) setToken(savedToken);
     if (savedRepo) {
@@ -185,7 +194,7 @@ export default function SettingsPage() {
         localStorage.setItem("codevault:repository", JSON.stringify({ owner, repo }));
         localStorage.setItem("codevault:github_token", token);
         supabaseAuth.saveRepository({ repository_name: repo, repository_owner: owner, github_token: token });
-        
+
         // Sync to extension
         const { syncStateToExtension } = await import("../../../services/supabaseAuth");
         await syncStateToExtension();
@@ -201,7 +210,7 @@ export default function SettingsPage() {
 
   const handleSaveGeneralSettings = (e: React.FormEvent) => {
     e.preventDefault();
-    localStorage.setItem("codevault:date-format",   dateFormat);
+    localStorage.setItem("codevault:date-format", dateFormat);
     localStorage.setItem("codevault:number-format", numberFormat);
     alert("Preferences saved.");
   };
@@ -243,7 +252,7 @@ export default function SettingsPage() {
 
       <div style={{ display: "flex", gap: 24, alignItems: "flex-start" }}>
         {/* ── Vertical Tab Rail ── */}
-        <nav style={{ display: "flex", flexDirection: "column", gap: 3, width: 172, flexShrink: 0, position: "sticky", top: 88 }}>
+        <nav className="settings-tab-rail" style={{ display: "flex", flexDirection: "column", gap: 3, width: 172, flexShrink: 0, position: "sticky", top: 88 }}>
           {tabs.map(({ id, label, Icon }) => (
             <button
               key={id}
@@ -266,7 +275,7 @@ export default function SettingsPage() {
         </nav>
 
         {/* ── Content Pane ── */}
-        <div style={{ flex: 1, minWidth: 0 }}>
+        <div className="settings-content" style={{ flex: 1, minWidth: 0 }}>
 
           {/* ════ PROFILE ════ */}
           {activeTab === "profile" && (
@@ -460,7 +469,7 @@ export default function SettingsPage() {
                   <div className="theme-picker">
                     {([
                       { id: "light" as const, label: "Light", Icon: Sun },
-                      { id: "dark"  as const, label: "Dark",  Icon: Moon },
+                      { id: "dark" as const, label: "Dark", Icon: Moon },
                       { id: "system" as const, label: "System", Icon: Monitor },
                     ]).map(({ id, label, Icon }) => (
                       <button key={id} type="button" onClick={() => preferences.setTheme(id)}
@@ -527,7 +536,7 @@ export default function SettingsPage() {
           {activeTab === "notifications" && (() => {
             const filtered = dbLogs.filter(log => {
               const matchCat = logFilter === "all" || log.category === logFilter;
-              const matchSearch = !logSearch || 
+              const matchSearch = !logSearch ||
                 log.title.toLowerCase().includes(logSearch.toLowerCase()) ||
                 log.message.toLowerCase().includes(logSearch.toLowerCase());
               return matchCat && matchSearch;
@@ -543,7 +552,7 @@ export default function SettingsPage() {
                     <h2>Sync Logs</h2>
                     <p>Full history of all synchronization activities stored in the database.</p>
                   </div>
-                  <div style={{ display: "flex", gap: 8, marginLeft: "auto" }}>
+                  <div className="settings-logs-header-actions" style={{ display: "flex", gap: 8, marginLeft: "auto" }}>
                     <button
                       onClick={fetchDbLogs}
                       disabled={logsLoading}
@@ -573,7 +582,7 @@ export default function SettingsPage() {
                 </div>
 
                 {/* Search + Filter bar */}
-                <div style={{ display: "flex", gap: 10, marginBottom: 16, alignItems: "center" }}>
+                <div className="settings-logs-toolbar" style={{ display: "flex", gap: 10, marginBottom: 16, alignItems: "center" }}>
                   <div style={{ position: "relative", flex: 1 }}>
                     <Search size={13} style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", color: "var(--muted)", pointerEvents: "none" }} />
                     <input
@@ -584,7 +593,7 @@ export default function SettingsPage() {
                       style={{ paddingLeft: 32 }}
                     />
                   </div>
-                  <div style={{ display: "flex", gap: 4 }}>
+                  <div className="settings-filter-chips" style={{ display: "flex", gap: 4 }}>
                     {(["all", "sync", "error", "system"] as const).map(cat => (
                       <button
                         key={cat}
@@ -733,12 +742,12 @@ export default function SettingsPage() {
 
               <div className="about-meta">
                 {[
-                  ["License",    "MIT Open Source"],
-                  ["Storage",    "Supabase + Chrome Sandbox"],
-                  ["Framework",  "Next.js 15 + React"],
-                  ["Extension",  "Chrome MV3"],
-                  ["Version",    APP_VERSION],
-                  ["Release",    "Phase 3"],
+                  ["License", "MIT Open Source"],
+                  ["Storage", "Supabase + Chrome Sandbox"],
+                  ["Framework", "Next.js 15 + React"],
+                  ["Extension", "Chrome MV3"],
+                  ["Version", APP_VERSION],
+                  ["Release", "Phase 3"],
                 ].map(([k, v]) => (
                   <div key={k} className="about-meta-item">
                     <span>{k}</span>

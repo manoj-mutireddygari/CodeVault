@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, ArrowRight, ChevronDown, Search, MessageSquare, Package, Shield, Zap, GitFork, CreditCard, Settings } from "lucide-react";
+import PublicNavbar from "../../components/PublicNavbar";
 
 const V = "#635bff";
 const VS = "#f4f3ff";
@@ -75,24 +76,10 @@ export default function FAQPage() {
     <div style={{ background: "#fff", color: "#0f172a", minHeight: "100vh", fontFamily: "Inter, ui-sans-serif, system-ui, sans-serif" }}>
 
       {/* ── NAV ── */}
-      <header style={{ position: "sticky", top: 0, zIndex: 50, borderBottom: "1px solid #f1f5f9", background: "rgba(255,255,255,0.97)", backdropFilter: "blur(16px)", padding: "0 48px", height: 64, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-        <Link href="/" style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none" }}>
-          <Image src="/main-logo.png" alt="CodeVault" width={26} height={26} style={{ borderRadius: 7 }} />
-          <span style={{ fontSize: 16, fontWeight: 800, letterSpacing: "-0.04em", color: "#0f172a" }}>CodeVault</span>
-        </Link>
-        <div style={{ display: "flex", gap: 24, fontSize: 13, fontWeight: 500, color: "#64748b" }}>
-          <Link href="/download" style={{ textDecoration: "none", color: "inherit" }}>Download</Link>
-          <Link href="/docs" style={{ textDecoration: "none", color: "inherit" }}>Docs</Link>
-        </div>
-        <Link href="/" style={{ display: "flex", alignItems: "center", gap: 7, fontSize: 13, fontWeight: 600, color: "#64748b", textDecoration: "none", padding: "8px 14px", border: "1px solid #e2e8f0", borderRadius: 9 }}
-          onMouseEnter={e => { e.currentTarget.style.borderColor = VB; e.currentTarget.style.color = V; }}
-          onMouseLeave={e => { e.currentTarget.style.borderColor = "#e2e8f0"; e.currentTarget.style.color = "#64748b"; }}>
-          <ArrowLeft size={13} /> Back to Home
-        </Link>
-      </header>
+      <PublicNavbar />
 
       {/* ── HERO ── */}
-      <section style={{ padding: "80px 48px 64px", background: "#fff", position: "relative", overflow: "hidden", textAlign: "center" }}>
+      <section className="responsive-hero-section" style={{ padding: "80px 48px 64px", background: "#fff", position: "relative", overflow: "hidden", textAlign: "center" }}>
         <div style={{ position: "absolute", inset: 0, backgroundImage: "radial-gradient(rgba(99,91,255,0.07) 1px, transparent 1px)", backgroundSize: "28px 28px", pointerEvents: "none" }} />
         <div style={{ position: "absolute", top: "60%", left: "50%", transform: "translate(-50%,-50%)", width: 600, height: 400, borderRadius: "50%", background: "radial-gradient(circle, rgba(99,91,255,0.06) 0%, transparent 65%)", pointerEvents: "none" }} />
         <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 100, background: "linear-gradient(to bottom, transparent, #fff)", pointerEvents: "none" }} />
@@ -120,10 +107,10 @@ export default function FAQPage() {
         </motion.div>
       </section>
 
-      <div style={{ maxWidth: 1000, margin: "0 auto", padding: "0 48px 120px" }}>
+      <div className="responsive-page-container" style={{ maxWidth: 1000, margin: "0 auto", padding: "0 48px 120px" }}>
 
         {/* ── CATEGORY TABS ── */}
-        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 48 }}>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 48, overflowX: "auto", paddingBottom: 4 }}>
           {categories.map(cat => (
             <button key={cat.id} onClick={() => { setActive(cat.id); setOpenIdx(null); }} style={{
               display: "flex", alignItems: "center", gap: 7, padding: "8px 16px", borderRadius: 100,
@@ -131,6 +118,7 @@ export default function FAQPage() {
               background: active === cat.id ? VS : "#fff",
               color: active === cat.id ? V : "#64748b",
               fontSize: 13, fontWeight: 600, cursor: "pointer", transition: "all 0.2s",
+              whiteSpace: "nowrap",
             }}>
               <cat.icon size={13} /> {cat.label}
             </button>
@@ -162,7 +150,7 @@ export default function FAQPage() {
               <AnimatePresence>
                 {openIdx === idx && (
                   <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.28 }}>
-                    <p style={{ fontSize: 15, color: "#64748b", lineHeight: 1.8, margin: "0 0 24px", paddingLeft: 21, paddingRight: 44 }}>{faq.a}</p>
+                    <p style={{ fontSize: 15, color: "#64748b", lineHeight: 1.8, margin: "0 0 24px", paddingLeft: 21, paddingRight: 16 }}>{faq.a}</p>
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -171,7 +159,7 @@ export default function FAQPage() {
         </div>
 
         {/* ── STATS ── */}
-        <div style={{ marginTop: 72, display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 20, textAlign: "center" }}>
+        <div className="responsive-grid-1col" style={{ marginTop: 72, display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 20, textAlign: "center" }}>
           {[{ val: `${faqs.length}+`, label: "Questions answered" }, { val: "7", label: "Topic categories" }, { val: "< 24h", label: "Support response time" }].map((s, i) => (
             <div key={i} style={{ padding: "28px 24px", borderRadius: 16, background: "#f8fafc", border: "1px solid #f1f5f9" }}>
               <div style={{ fontSize: 32, fontWeight: 900, color: "#0f172a", letterSpacing: "-0.04em", marginBottom: 6 }}>{s.val}</div>
@@ -181,7 +169,7 @@ export default function FAQPage() {
         </div>
 
         {/* ── CONTACT CTA ── */}
-        <div style={{ marginTop: 48, padding: "40px 48px", borderRadius: 20, background: "#0f172a", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 24 }}>
+        <div className="responsive-flex-stack" style={{ marginTop: 48, padding: "32px 36px", borderRadius: 20, background: "#0f172a", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 24 }}>
           <div>
             <h3 style={{ fontSize: 22, fontWeight: 800, color: "#fff", margin: "0 0 8px", letterSpacing: "-0.03em" }}>Still have questions?</h3>
             <p style={{ fontSize: 15, color: "#64748b", margin: 0, lineHeight: 1.6 }}>

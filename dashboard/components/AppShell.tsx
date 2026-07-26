@@ -2,13 +2,13 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   Bell, BookOpen, Code2, GitFork, GitCommitHorizontal,
   LayoutDashboard, Menu, Settings, Trophy, ChartNoAxesCombined,
-  X, Check, Trash2, LogOut, ChevronRight, ExternalLink,
-  Zap, Mail, Calendar,
+  X, Check, Trash2, LogOut, ChevronRight, ChevronDown, ExternalLink,
+  Zap, Mail, Calendar, User, Palette, BellRing, Wrench, Info,
 } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
@@ -16,21 +16,41 @@ import { useRepository } from "../contexts/RepositoryContext";
 import { useExtension } from "../hooks/useExtension";
 import { supabaseAuth, syncStateToExtension } from "../services/supabaseAuth";
 
-const NAV = [
-  { href: "/dashboard",              label: "Dashboard",    Icon: LayoutDashboard     },
-  { href: "/dashboard/problems",     label: "Problems",     Icon: Code2               },
-  { href: "/dashboard/statistics",   label: "Statistics",   Icon: ChartNoAxesCombined },
-  { href: "/dashboard/timeline",     label: "Timeline",     Icon: GitCommitHorizontal },
-  { href: "/dashboard/achievements", label: "Achievements", Icon: Trophy              },
-  { href: "/dashboard/repository",   label: "Repository",   Icon: GitFork             },
-  { href: "/dashboard/settings",     label: "Settings",     Icon: Settings            },
-  { href: "/dashboard/help",         label: "Help & Docs",  Icon: BookOpen            },
+const DESKTOP_NAV = [
+  { href: "/dashboard", label: "Dashboard", Icon: LayoutDashboard },
+  { href: "/dashboard/problems", label: "Problems", Icon: Code2 },
+  { href: "/dashboard/statistics", label: "Statistics", Icon: ChartNoAxesCombined },
+  { href: "/dashboard/timeline", label: "Timeline", Icon: GitCommitHorizontal },
+  { href: "/dashboard/achievements", label: "Achievements", Icon: Trophy },
+  { href: "/dashboard/repository", label: "Repository", Icon: GitFork },
+  { href: "/dashboard/settings", label: "Settings", Icon: Settings },
+  { href: "/dashboard/help", label: "Help & Docs", Icon: BookOpen },
+];
+
+const MOBILE_NAV = [
+  { href: "/dashboard", label: "Dashboard", Icon: LayoutDashboard, tab: null },
+  { href: "/dashboard/repository", label: "Repository", Icon: GitFork, tab: null },
+  { href: "/dashboard/settings?tab=profile", label: "Profile", Icon: User, tab: "profile" },
+  { href: "/dashboard/settings?tab=github", label: "GitHub", Icon: GitFork, tab: "github" },
+  { href: "/dashboard/settings?tab=appearance", label: "Appearance", Icon: Palette, tab: "appearance" },
+  { href: "/dashboard/settings?tab=notifications", label: "Logs", Icon: BellRing, tab: "notifications" },
+  { href: "/dashboard/settings?tab=advanced", label: "Advanced", Icon: Wrench, tab: "advanced" },
+  { href: "/dashboard/settings?tab=about", label: "About", Icon: Info, tab: "about" },
+  { href: "/dashboard/help", label: "Help & Docs", Icon: BookOpen, tab: null },
+];
+
+const MOBILE_BOTTOM_NAV = [
+  { href: "/dashboard", label: "Dashboard", Icon: LayoutDashboard },
+  { href: "/dashboard/problems", label: "Problems", Icon: Code2 },
+  { href: "/dashboard/statistics", label: "Statistics", Icon: ChartNoAxesCombined },
+  { href: "/dashboard/timeline", label: "Timeline", Icon: GitCommitHorizontal },
+  { href: "/dashboard/achievements", label: "Achievements", Icon: Trophy },
 ];
 
 const PLAN_STYLE: Record<string, { bg: string; color: string }> = {
-  free:      { bg: "rgba(100,116,139,0.12)", color: "#64748b" },
-  pro:       { bg: "rgba(109,106,254,0.15)", color: "#6d6afe" },
-  developer: { bg: "rgba(245,158,11,0.15)",  color: "#f59e0b" },
+  free: { bg: "rgba(100,116,139,0.12)", color: "#64748b" },
+  pro: { bg: "rgba(109,106,254,0.15)", color: "#6d6afe" },
+  developer: { bg: "rgba(245,158,11,0.15)", color: "#f59e0b" },
 };
 
 /* ════════════════════════════════════════════════════════════
@@ -41,15 +61,15 @@ function ProfileModal({ onClose }: { onClose: () => void }) {
   useEffect(() => {
     setMounted(true);
   }, []);
-  const router     = useRouter();
-  const profile    = supabaseAuth.getProfile();
-  const repo       = useRepository();
-  const extension  = useExtension();
+  const router = useRouter();
+  const profile = supabaseAuth.getProfile();
+  const repo = useRepository();
+  const extension = useExtension();
 
-  const name    = profile?.full_name || profile?.username || "CodeVault User";
-  const email   = profile?.email || "";
+  const name = profile?.full_name || profile?.username || "CodeVault User";
+  const email = profile?.email || "";
   const initial = (name[0] || "U").toUpperCase();
-  const plan    = profile?.plan || "free";
+  const plan = profile?.plan || "free";
 
   const planGradient: Record<string, string> = {
     free: "linear-gradient(135deg, #64748b, #475569)",
@@ -76,9 +96,9 @@ function ProfileModal({ onClose }: { onClose: () => void }) {
       onClick={onClose}
       style={{
         position: "fixed", inset: 0, zIndex: 9999,
-        background: "rgba(9, 11, 18, 0.65)",
-        backdropFilter: "blur(14px) saturate(190%)",
-        WebkitBackdropFilter: "blur(14px) saturate(190%)",
+        background: "rgba(15, 23, 42, 0.4)",
+        backdropFilter: "blur(16px) saturate(180%)",
+        WebkitBackdropFilter: "blur(16px) saturate(180%)",
         display: "flex", alignItems: "center", justifyContent: "center",
         padding: 24,
         overflowY: "auto",
@@ -90,20 +110,7 @@ function ProfileModal({ onClose }: { onClose: () => void }) {
         exit={{ opacity: 0, scale: 0.94, y: 16 }}
         transition={{ type: "spring", stiffness: 380, damping: 28 }}
         onClick={e => e.stopPropagation()}
-        style={{
-          background: "var(--card-bg)",
-          backdropFilter: "blur(24px) saturate(180%)",
-          border: "1px solid var(--line)",
-          borderRadius: 24,
-          boxShadow: "0 24px 64px -12px rgba(0, 0, 0, 0.25), inset 0 1px 0px rgba(255, 255, 255, 0.15)",
-          width: "100%", maxWidth: 400,
-          padding: 28,
-          position: "relative",
-          display: "flex", flexDirection: "column", gap: 20,
-          maxHeight: "calc(100vh - 48px)",
-          overflowY: "auto",
-          margin: "auto",
-        }}
+        className="profile-modal-content"
       >
         {/* Close Button */}
         <button
@@ -112,17 +119,20 @@ function ProfileModal({ onClose }: { onClose: () => void }) {
           style={{
             position: "absolute", top: 18, right: 18,
             width: 28, height: 28, borderRadius: "50%",
-            border: "1px solid var(--line)", background: "transparent",
+            border: "1px solid #e2e8f0", background: "rgba(255, 255, 255, 0.8)",
             cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
-            color: "var(--muted)", transition: "all 0.2s",
+            color: "#64748b", transition: "all 0.2s",
+            boxShadow: "0 2px 6px rgba(0,0,0,0.05)",
           }}
           onMouseEnter={e => {
-            e.currentTarget.style.background = "var(--violet-soft)";
-            e.currentTarget.style.color = "var(--violet)";
+            e.currentTarget.style.background = "#f4f3ff";
+            e.currentTarget.style.color = "#635bff";
+            e.currentTarget.style.borderColor = "#c7d2fe";
           }}
           onMouseLeave={e => {
-            e.currentTarget.style.background = "transparent";
-            e.currentTarget.style.color = "var(--muted)";
+            e.currentTarget.style.background = "rgba(255, 255, 255, 0.8)";
+            e.currentTarget.style.color = "#64748b";
+            e.currentTarget.style.borderColor = "#e2e8f0";
           }}
         >
           <X size={14} />
@@ -140,10 +150,10 @@ function ProfileModal({ onClose }: { onClose: () => void }) {
             {initial}
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>
-            <h2 style={{ fontSize: 17, fontWeight: 800, color: "var(--ink)", letterSpacing: "-0.03em", margin: 0 }}>
+            <h2 style={{ fontSize: 17, fontWeight: 800, color: "#0f172a", letterSpacing: "-0.03em", margin: 0 }}>
               {name}
             </h2>
-            <span style={{ fontSize: 12, color: "var(--muted)", fontWeight: 500 }}>
+            <span style={{ fontSize: 12, color: "#64748b", fontWeight: 500 }}>
               @{profile?.username || "user"}
             </span>
           </div>
@@ -163,8 +173,8 @@ function ProfileModal({ onClose }: { onClose: () => void }) {
         <div style={{
           display: "flex", flexDirection: "column", gap: 12,
           padding: 16, borderRadius: 16,
-          background: "rgba(109, 106, 254, 0.04)",
-          border: "1px solid rgba(109, 106, 254, 0.1)",
+          background: "rgba(248, 250, 252, 0.85)",
+          border: "1px solid #e2e8f0",
         }}>
           {[
             { Icon: Mail, content: email || "No email set" },
@@ -203,8 +213,10 @@ function ProfileModal({ onClose }: { onClose: () => void }) {
           {extension.isInstalled ? "Extension connected" : "Extension not detected"}
           {!extension.isInstalled && (
             <Link href="/dashboard/help" onClick={onClose}
-              style={{ marginLeft: "auto", fontSize: 11, color: "#6d6afe", textDecoration: "none", fontWeight: 600,
-                display: "flex", alignItems: "center", gap: 3 }}>
+              style={{
+                marginLeft: "auto", fontSize: 11, color: "#6d6afe", textDecoration: "none", fontWeight: 600,
+                display: "flex", alignItems: "center", gap: 3
+              }}>
               Install guide <ChevronRight size={11} />
             </Link>
           )}
@@ -272,12 +284,13 @@ function ProfileModal({ onClose }: { onClose: () => void }) {
             <Link href="/dashboard/settings" onClick={onClose}
               style={{
                 flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-                padding: "10px 16px", borderRadius: 12, border: "1.5px solid var(--line)",
-                background: "var(--card-bg)", color: "var(--ink)", fontSize: 13, fontWeight: 600,
+                padding: "11px 16px", borderRadius: 12, border: "1.5px solid #e2e8f0",
+                background: "#ffffff", color: "#0f172a", fontSize: 13, fontWeight: 700,
                 textDecoration: "none", cursor: "pointer", transition: "all 0.2s",
+                boxShadow: "0 2px 6px rgba(0,0,0,0.04)",
               }}
-              onMouseEnter={e => { e.currentTarget.style.background = "var(--violet-soft)"; e.currentTarget.style.color = "var(--violet)"; }}
-              onMouseLeave={e => { e.currentTarget.style.background = "var(--card-bg)"; e.currentTarget.style.color = "var(--ink)"; }}
+              onMouseEnter={e => { e.currentTarget.style.background = "#f4f3ff"; e.currentTarget.style.color = "#635bff"; e.currentTarget.style.borderColor = "#c7d2fe"; }}
+              onMouseLeave={e => { e.currentTarget.style.background = "#ffffff"; e.currentTarget.style.color = "#0f172a"; e.currentTarget.style.borderColor = "#e2e8f0"; }}
             >
               <Settings size={14} /> Settings
             </Link>
@@ -285,12 +298,13 @@ function ProfileModal({ onClose }: { onClose: () => void }) {
               onClick={() => setConfirmingSignOut(true)}
               style={{
                 flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-                padding: "10px 16px", borderRadius: 12, border: "1.5px solid rgba(239,68,68,0.2)",
-                background: "transparent", color: "#ef4444", fontSize: 13, fontWeight: 600,
+                padding: "11px 16px", borderRadius: 12, border: "1.5px solid rgba(239,68,68,0.25)",
+                background: "#fff5f5", color: "#ef4444", fontSize: 13, fontWeight: 700,
                 cursor: "pointer", transition: "all 0.2s",
+                boxShadow: "0 2px 6px rgba(239,68,68,0.06)",
               }}
-              onMouseEnter={e => { e.currentTarget.style.background = "rgba(239,68,68,0.06)"; }}
-              onMouseLeave={e => { e.currentTarget.style.background = "transparent"; }}
+              onMouseEnter={e => { e.currentTarget.style.background = "#fee2e2"; e.currentTarget.style.borderColor = "#fca5a5"; }}
+              onMouseLeave={e => { e.currentTarget.style.background = "#fff5f5"; e.currentTarget.style.borderColor = "rgba(239,68,68,0.25)"; }}
             >
               <LogOut size={14} /> Sign Out
             </button>
@@ -306,35 +320,45 @@ function ProfileModal({ onClose }: { onClose: () => void }) {
    APPSHELL
 ════════════════════════════════════════════════════════════ */
 export function AppShell({ children }: { children: React.ReactNode }) {
-  const path       = usePathname();
-  const router     = useRouter();
+  const path = usePathname();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const currentTab = searchParams.get("tab") || "profile";
   const repository = useRepository();
-  const extension  = useExtension();
+  const extension = useExtension();
 
-  const [menuOpen,           setMenuOpen]           = useState(false);
-  const [showNotifications,  setShowNotifications]  = useState(false);
-  const [showProfile,        setShowProfile]        = useState(false);
-  const [authChecked,        setAuthChecked]        = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [showProfile, setShowProfile] = useState(false);
+  const [authChecked, setAuthChecked] = useState(false);
 
   const notifRef = useRef<HTMLDivElement>(null);
 
-  // ── Auth Guard (sync — avoids hydration flicker) ──────────
+  // ── Auth Guard ──────────
   useEffect(() => {
-    const session    = supabaseAuth.getSession();
-    const isPlatform = path.startsWith("/dashboard") || path === "/onboarding";
-    const isAuthPage = path === "/login" || path === "/register";
+    let cancelled = false;
+    const checkAuth = async () => {
+      const isPlatform = path.startsWith("/dashboard") || path === "/onboarding";
+      const isAuthPage = path === "/login" || path === "/register";
 
-    if (isPlatform && !session)  {
-      setAuthChecked(false);
-      router.replace("/login");
-      return;
-    }
-    if (isAuthPage && session)   {
-      router.replace("/dashboard");
-      return;
-    }
+      const session = await supabaseAuth.ensureValidSession();
+      if (cancelled) return;
 
-    setAuthChecked(true);
+      if (isPlatform && !session) {
+        setAuthChecked(false);
+        router.replace("/login");
+        return;
+      }
+      if (isAuthPage && session) {
+        router.replace("/dashboard");
+        return;
+      }
+
+      setAuthChecked(true);
+    };
+
+    checkAuth();
+    return () => { cancelled = true; };
   }, [path, router]);
 
   // Sync state to extension once authenticated
@@ -405,13 +429,20 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   if (!path.startsWith("/dashboard")) return <>{children}</>;
 
   const unreadCount = extension.notifications.filter(n => !n.read).length;
-  const closeAll    = () => { setMenuOpen(false); setShowNotifications(false); };
-  const profile     = supabaseAuth.getProfile();
-  const initial     = (profile?.full_name || profile?.email || "CV")[0].toUpperCase();
+  const closeAll = () => { setMenuOpen(false); setShowNotifications(false); };
+  const profile = supabaseAuth.getProfile();
+  const initial = (profile?.full_name || profile?.email || "CV")[0].toUpperCase();
 
-  const currentLabel = NAV.find(n =>
-    n.href === path || (n.href !== "/dashboard" && path.startsWith(n.href))
-  )?.label ?? "Dashboard";
+  const currentLabel = (() => {
+    if (path.startsWith("/dashboard/settings")) {
+      const sub = MOBILE_NAV.find(s => s.tab === currentTab);
+      return sub ? `Settings — ${sub.label}` : "Settings";
+    }
+    const item = DESKTOP_NAV.find(n =>
+      n.href === path || (n.href !== "/dashboard" && path.startsWith(n.href))
+    );
+    return item?.label ?? "Dashboard";
+  })();
 
   return (
     <>
@@ -429,8 +460,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
           {/* Brand */}
           <Link href="/dashboard" className="brand" onClick={closeAll}
-            style={{ display: "flex", alignItems: "center", gap: 10,
-              textDecoration: "none", padding: "0 4px 24px", color: "var(--ink)" }}>
+            style={{
+              display: "flex", alignItems: "center", gap: 10,
+              textDecoration: "none", padding: "0 4px 24px", color: "var(--ink)"
+            }}>
             <Image
               src="/main-logo.png"
               alt="CodeVault"
@@ -445,18 +478,40 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </Link>
 
           {/* Nav links */}
-          <nav>
-            {NAV.map(({ href, label, Icon }) => {
-              const active = href === "/dashboard" ? path === href : path.startsWith(href);
-              return (
-                <Link key={href} href={href} onClick={closeAll}
-                  className={active ? "active" : ""}>
-                  <Icon size={16} />
-                  <span>{label}</span>
-                  {active && <motion.i layoutId="active-nav" />}
-                </Link>
-              );
-            })}
+          <nav className="shell-nav">
+            {/* Desktop Nav Items */}
+            <div className="desktop-nav-group">
+              {DESKTOP_NAV.map(({ href, label, Icon }) => {
+                const active = href === "/dashboard" ? path === href : path.startsWith(href);
+                return (
+                  <Link key={href} href={href} onClick={closeAll}
+                    className={active ? "active" : ""}>
+                    <Icon size={16} />
+                    <span>{label}</span>
+                    {active && <motion.i layoutId="active-nav-desktop" />}
+                  </Link>
+                );
+              })}
+            </div>
+
+            {/* Mobile Nav Items */}
+            <div className="mobile-nav-group">
+              {MOBILE_NAV.map(({ href, label, Icon, tab }) => {
+                const active = tab
+                  ? path.startsWith("/dashboard/settings") && currentTab === tab
+                  : href === "/dashboard"
+                    ? path === href
+                    : path.startsWith(href);
+                return (
+                  <Link key={href} href={href} onClick={closeAll}
+                    className={active ? "active" : ""}>
+                    <Icon size={16} />
+                    <span>{label}</span>
+                    {active && <motion.i layoutId="active-nav-mobile" />}
+                  </Link>
+                );
+              })}
+            </div>
           </nav>
 
           {/* User row → opens Profile Modal */}
@@ -479,17 +534,23 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             }}>
               {initial}
             </div>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 12, fontWeight: 700, color: "var(--ink)",
-                whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                {profile?.full_name || profile?.username || "CodeVault User"}
+            <div className="user-btn-text" style={{ flex: 1, minWidth: 0, display: "flex", alignItems: "center", gap: 10 }}>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{
+                  fontSize: 12, fontWeight: 700, color: "var(--ink)",
+                  whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis"
+                }}>
+                  {profile?.full_name || profile?.username || "CodeVault User"}
+                </div>
+                <div style={{
+                  fontSize: 11, color: "var(--muted)",
+                  whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis"
+                }}>
+                  {profile?.email || ""}
+                </div>
               </div>
-              <div style={{ fontSize: 11, color: "var(--muted)",
-                whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                {profile?.email || ""}
-              </div>
+              <ChevronRight size={13} style={{ color: "var(--muted)", flexShrink: 0 }} />
             </div>
-            <ChevronRight size={13} style={{ color: "var(--muted)", flexShrink: 0 }} />
           </button>
         </aside>
 
@@ -507,15 +568,16 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
           {/* Topbar */}
           <header className="topbar">
-            <button className="menu" aria-label="Toggle menu"
-              onClick={() => setMenuOpen(!menuOpen)}>
-              {menuOpen ? <X size={20} /> : <Menu size={20} />}
-            </button>
+            <div className="topbar-left">
+              <button className="menu" aria-label="Toggle menu"
+                onClick={() => setMenuOpen(!menuOpen)}>
+                {menuOpen ? <X size={20} /> : <Menu size={20} />}
+              </button>
 
-            <span style={{ fontSize: 15, fontWeight: 700, color: "var(--ink)",
-              letterSpacing: "-0.02em" }}>
-              {currentLabel}
-            </span>
+              <span className="topbar-title">
+                {currentLabel}
+              </span>
+            </div>
 
             <div className="top-meta">
               {/* Repo pill */}
@@ -526,21 +588,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   return (
                     <a href={`https://github.com/${ownerName}/${repository.repo}`}
                       target="_blank" rel="noreferrer"
-                      style={{
-                        display: "inline-flex", alignItems: "center", gap: 6,
-                        padding: "5px 10px", borderRadius: 20,
-                        background: "var(--violet-soft)",
-                        border: "1px solid rgba(109,106,254,0.2)",
-                        fontSize: 11, fontWeight: 600, color: "var(--violet)",
-                        textDecoration: "none",
-                      }}>
+                      className="responsive-repo-pill">
                       <span style={{
                         width: 6, height: 6, borderRadius: "50%",
                         background: "#10b981",
                         boxShadow: "0 0 0 3px rgba(16,185,129,0.18)", flexShrink: 0,
                       }} />
-                      {ownerName}/{repository.repo}
-                      <ExternalLink size={10} />
+                      <span className="responsive-repo-text">{ownerName}/{repository.repo}</span>
+                      <ExternalLink size={10} style={{ flexShrink: 0 }} />
                     </a>
                   );
                 })()
@@ -659,13 +714,16 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
           {/* Mobile bottom nav */}
           <div className="mobile-nav">
-            {NAV.slice(0, 5).map(({ href, label, Icon }) => (
-              <Link key={href} href={href} aria-label={label} onClick={closeAll}
-                className={path === href ? "active" : ""}>
-                <Icon size={18} />
-                <small>{label}</small>
-              </Link>
-            ))}
+            {MOBILE_BOTTOM_NAV.map(({ href, label, Icon }) => {
+              const active = href === "/dashboard" ? path === href : path.startsWith(href);
+              return (
+                <Link key={href} href={href} aria-label={label} onClick={closeAll}
+                  className={active ? "active" : ""}>
+                  <Icon size={18} />
+                  <small>{label}</small>
+                </Link>
+              );
+            })}
           </div>
         </div>
       </div>

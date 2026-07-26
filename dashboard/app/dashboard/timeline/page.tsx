@@ -1,4 +1,6 @@
 "use client";
+
+export const dynamic = "force-dynamic";
 import { GitFork } from "lucide-react";
 import { useRepository } from "../../../contexts/RepositoryContext";
 import { useVault } from "../../../hooks/useVault";

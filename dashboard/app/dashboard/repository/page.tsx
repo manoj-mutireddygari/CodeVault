@@ -1,5 +1,7 @@
 "use client";
 
+export const dynamic = "force-dynamic";
+
 import { useEffect, useState } from "react";
 import { useRepository } from "../../../contexts/RepositoryContext";
 import { useVault } from "../../../hooks/useVault";
@@ -62,7 +64,7 @@ export default function RepositoryPage() {
         </div>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 24, marginTop: 12 }}>
+      <div className="responsive-grid-2-1">
         {/* Main Panel */}
         <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
           {/* Card: Repository Details */}
@@ -82,7 +84,7 @@ export default function RepositoryPage() {
               </span>
             </div>
 
-            <dl style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, margin: "0 0 24px" }}>
+            <dl className="responsive-grid-2" style={{ margin: "0 0 24px" }}>
               <div>
                 <dt style={{ fontSize: 11, fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", marginBottom: 4 }}>GitHub Owner</dt>
                 <dd style={{ fontSize: 14, fontWeight: 800, margin: 0 }}>{repository.owner}</dd>

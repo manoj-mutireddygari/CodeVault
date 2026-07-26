@@ -8,6 +8,7 @@ import {
   FolderOpen, ToggleRight, Plug, Shield,
   AlertCircle, ExternalLink, Clock, Zap,
 } from "lucide-react";
+import PublicNavbar from "../../components/PublicNavbar";
 
 const V = "#635bff";
 const VS = "#f4f3ff";
@@ -103,26 +104,10 @@ export default function InstallPage() {
     <div style={{ background: "#fff", color: "#0f172a", minHeight: "100vh", fontFamily: "Inter, ui-sans-serif, system-ui, sans-serif" }}>
 
       {/* ── NAV ── */}
-      <header style={{ position: "sticky", top: 0, zIndex: 50, borderBottom: "1px solid #f1f5f9", background: "rgba(255,255,255,0.97)", backdropFilter: "blur(16px)", padding: "0 48px", height: 64, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-        <Link href="/" style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none" }}>
-          <Image src="/main-logo.png" alt="CodeVault" width={26} height={26} style={{ borderRadius: 7 }} />
-          <span style={{ fontSize: 16, fontWeight: 800, letterSpacing: "-0.04em", color: "#0f172a" }}>CodeVault</span>
-          <span style={{ fontSize: 13, color: "#94a3b8", fontWeight: 400, marginLeft: 4 }}>/ Install Guide</span>
-        </Link>
-        <div style={{ display: "flex", gap: 24, fontSize: 13, fontWeight: 500, color: "#64748b" }}>
-          <Link href="/download" style={{ textDecoration: "none", color: "inherit" }}>Download</Link>
-          <Link href="/docs" style={{ textDecoration: "none", color: "inherit" }}>Docs</Link>
-          <Link href="/faq" style={{ textDecoration: "none", color: "inherit" }}>FAQ</Link>
-        </div>
-        <Link href="/" style={{ display: "flex", alignItems: "center", gap: 7, fontSize: 13, fontWeight: 600, color: "#64748b", textDecoration: "none", padding: "8px 14px", border: "1px solid #e2e8f0", borderRadius: 9 }}
-          onMouseEnter={e => { e.currentTarget.style.borderColor = VB; e.currentTarget.style.color = V; }}
-          onMouseLeave={e => { e.currentTarget.style.borderColor = "#e2e8f0"; e.currentTarget.style.color = "#64748b"; }}>
-          <ArrowLeft size={13} /> Back to Home
-        </Link>
-      </header>
+      <PublicNavbar />
 
       {/* ── HERO ── */}
-      <section style={{ padding: "80px 48px 64px", background: "#fff", position: "relative", overflow: "hidden", textAlign: "center" }}>
+      <section className="responsive-hero-section" style={{ padding: "80px 48px 64px", background: "#fff", position: "relative", overflow: "hidden", textAlign: "center" }}>
         <div style={{ position: "absolute", inset: 0, backgroundImage: "radial-gradient(rgba(99,91,255,0.07) 1px, transparent 1px)", backgroundSize: "28px 28px", pointerEvents: "none" }} />
         <div style={{ position: "absolute", top: "60%", left: "50%", transform: "translate(-50%,-50%)", width: 700, height: 400, borderRadius: "50%", background: "radial-gradient(circle, rgba(99,91,255,0.06) 0%, transparent 65%)", pointerEvents: "none" }} />
         <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 100, background: "linear-gradient(to bottom, transparent, #fff)", pointerEvents: "none" }} />
@@ -150,12 +135,13 @@ export default function InstallPage() {
         </motion.div>
       </section>
 
-      <div style={{ maxWidth: 860, margin: "0 auto", padding: "0 48px 120px" }}>
+      <div className="responsive-page-container" style={{ maxWidth: 860, margin: "0 auto", padding: "0 48px 120px" }}>
 
         {/* ── STEPS ── */}
         <div style={{ display: "flex", flexDirection: "column", gap: 24, marginBottom: 72 }}>
           {steps.map((step, i) => (
             <motion.div key={i} initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.08 }}
+              className="responsive-flex-stack responsive-card"
               style={{ display: "flex", gap: 24, padding: "32px 36px", borderRadius: 20, border: "1.5px solid #f1f5f9", background: "#fff", boxShadow: "0 2px 8px rgba(15,23,42,0.04)", position: "relative", overflow: "hidden" }}>
               {/* Accent left bar */}
               <div style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: 4, borderRadius: "20px 0 0 20px", background: `linear-gradient(to bottom, ${V}, #a78bfa)` }} />
@@ -167,10 +153,10 @@ export default function InstallPage() {
                 </div>
               </div>
               {/* Content */}
-              <div style={{ flex: 1 }}>
+              <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12, marginBottom: 8 }}>
                   <h2 style={{ fontSize: 18, fontWeight: 800, margin: 0, color: "#0f172a", letterSpacing: "-0.02em" }}>{step.title}</h2>
-                  <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
                     <span style={{ fontSize: 12, fontWeight: 600, color: "#94a3b8", background: "#f8fafc", border: "1px solid #f1f5f9", padding: "4px 10px", borderRadius: 100 }}>
                       <Clock size={10} style={{ display: "inline", marginRight: 4 }} />{step.time}
                     </span>
@@ -186,9 +172,9 @@ export default function InstallPage() {
                   ))}
                 </ul>
                 {step.code && (
-                  <div style={{ marginTop: 16, display: "inline-flex", alignItems: "center", gap: 10, background: "#0f172a", borderRadius: 10, padding: "10px 16px" }}>
-                    <span style={{ fontSize: 13, fontFamily: "ui-monospace, monospace", color: "#a78bfa", fontWeight: 600 }}>{step.code}</span>
-                    <ExternalLink size={12} style={{ color: "#64748b" }} />
+                  <div style={{ marginTop: 16, display: "inline-flex", alignItems: "center", gap: 10, background: "#0f172a", borderRadius: 10, padding: "10px 16px", maxWidth: "100%", overflowX: "auto" }}>
+                    <span style={{ fontSize: 13, fontFamily: "ui-monospace, monospace", color: "#a78bfa", fontWeight: 600, wordBreak: "break-all" }}>{step.code}</span>
+                    <ExternalLink size={12} style={{ color: "#64748b", flexShrink: 0 }} />
                   </div>
                 )}
                 {step.tip && (
@@ -206,7 +192,7 @@ export default function InstallPage() {
         <section style={{ marginBottom: 64 }}>
           <h2 style={{ fontSize: 22, fontWeight: 900, letterSpacing: "-0.03em", color: "#0f172a", margin: "0 0 8px" }}>Browser Compatibility</h2>
           <p style={{ fontSize: 15, color: "#64748b", margin: "0 0 28px" }}>CodeVault requires a Chromium-based browser with Manifest V3 support.</p>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
+          <div className="responsive-grid-1col" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
             {browsers.map((b, i) => (
               <div key={i} style={{ padding: "18px 20px", borderRadius: 14, background: b.supported ? "#f0fdf4" : "#fafafa", border: `1.5px solid ${b.supported ? "#bbf7d0" : "#f1f5f9"}`, display: "flex", alignItems: "center", gap: 12 }}>
                 <div style={{ width: 28, height: 28, borderRadius: "50%", background: b.supported ? "#dcfce7" : "#f1f5f9", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
@@ -241,7 +227,7 @@ export default function InstallPage() {
         </section>
 
         {/* ── CTA ── */}
-        <div style={{ padding: "40px 48px", borderRadius: 20, background: "linear-gradient(135deg, #f4f3ff 0%, #ede9fe 100%)", border: `1.5px solid ${VB}`, display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 24 }}>
+        <div className="responsive-flex-stack" style={{ padding: "40px 48px", borderRadius: 20, background: "linear-gradient(135deg, #f4f3ff 0%, #ede9fe 100%)", border: `1.5px solid ${VB}`, display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 24 }}>
           <div>
             <div style={{ fontSize: 11, fontWeight: 700, color: V, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 8 }}>All done?</div>
             <h3 style={{ fontSize: 20, fontWeight: 800, color: "#0f172a", margin: "0 0 6px" }}>Create your free account</h3>
