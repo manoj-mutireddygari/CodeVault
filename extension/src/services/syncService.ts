@@ -177,11 +177,18 @@ export async function syncSubmission(submission: Submission): Promise<SyncResult
   const solutionPath = `${folderName}/solution.${extensionFor(submission.language)}`;
   const githubUrl = client.repositoryUrl(resolvedOwner, resolvedRepo, solutionPath);
 
-  // Check if identical solution already exists on GitHub
-  const existingSolutionFile = await client.getFile(resolvedOwner, resolvedRepo, solutionPath);
-  if (existingSolutionFile && existingSolutionFile.content.trim() === submission.sourceCode.trim()) {
-    logger.debug("sync:identical-solution-exists", { problemId: submission.problemId });
-    return { ok: true, message: "Solution already up-to-date on GitHub", url: githubUrl };
+  // Check if solution file and testcases file on GitHub are already up to date
+  const [existingSolutionFile, existingTestCasesFile] = await Promise.all([
+    client.getFile(resolvedOwner, resolvedRepo, solutionPath),
+    client.getFile(resolvedOwner, resolvedRepo, `${folderName}/testcases.txt`)
+  ]);
+
+  const solutionMatches = Boolean(existingSolutionFile && existingSolutionFile.content.trim() === submission.sourceCode.trim());
+  const testcasesMatches = Boolean(existingTestCasesFile && existingTestCasesFile.content.trim() === (submission.testCases || "").trim());
+
+  if (solutionMatches && testcasesMatches) {
+    logger.debug("sync:identical-solution-and-testcases-exist", { problemId: submission.problemId });
+    return { ok: true, message: "Solution and test cases already up-to-date on GitHub", url: githubUrl };
   }
 
   const isUpdate = Boolean(existingSolutionFile);
@@ -231,6 +238,7 @@ export async function syncSubmission(submission: Submission): Promise<SyncResult
         : `feat: add ${folderName} (${submission.language})`;
       const files = [
         { path: solutionPath, content: submission.sourceCode },
+        { path: `${folderName}/testcases.txt`, content: submission.testCases || "" },
         { path: `${folderName}/metadata.json`, content: JSON.stringify(metadata, null, 2) },
         { path: `${folderName}/README.md`, content: createSolutionReadme(metadata) },
         { path: "problems.json", content: JSON.stringify(problems, null, 2) },

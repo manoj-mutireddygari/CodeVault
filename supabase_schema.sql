@@ -138,6 +138,7 @@ create table if not exists public.submissions (
   topics        text[]      not null default '{}',
   language      text        not null,
   source_code   text,
+  test_cases    text,
   runtime       text,
   memory        text,
   submitted_at  timestamptz not null,
@@ -146,6 +147,9 @@ create table if not exists public.submissions (
   created_at    timestamptz not null default now(),
   unique (user_id, problem_id, language)
 );
+
+-- Migration for existing installations:
+alter table public.submissions add column if not exists test_cases text;
 
 create index if not exists submissions_user_id_idx      on public.submissions (user_id);
 create index if not exists submissions_submitted_at_idx on public.submissions (user_id, submitted_at desc);
@@ -167,6 +171,7 @@ create table if not exists public.sync_queue (
   topics        text[]      not null default '{}',
   language      text        not null,
   source_code   text        not null,
+  test_cases    text,
   runtime       text,
   memory        text,
   submitted_at  timestamptz not null,
@@ -179,6 +184,8 @@ create table if not exists public.sync_queue (
   synced_at     timestamptz,
   unique (user_id, problem_id, language)
 );
+
+alter table public.sync_queue add column if not exists test_cases text;
 
 create index if not exists sync_queue_user_status_idx on public.sync_queue (user_id, status);
 

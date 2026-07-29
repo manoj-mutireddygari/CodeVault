@@ -11,6 +11,7 @@ export interface Submission {
   memory?: string;
   submittedAt: string;
   sourceCode: string;
+  testCases?: string;
   leetCodeUrl: string;
 }
 

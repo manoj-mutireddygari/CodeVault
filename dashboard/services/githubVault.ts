@@ -37,6 +37,7 @@ const metadataSchema = z.object({
   language: z.string(),
   runtime: z.string().optional(),
   memory: z.string().optional(),
+  testCases: z.string().optional(),
   submissionDate: z.string(),
   githubUrl: z.string(),
   leetCodeUrl: z.string(),
@@ -172,6 +173,7 @@ const mockMetadatas: Record<string, any> = {
     language: "python3",
     runtime: "32 ms",
     memory: "15.2 MB",
+    testCases: "Case 1:\nnums = [2,7,11,15]\ntarget = 9\nOutput = [0,1]\n\nCase 2:\nnums = [3,2,4]\ntarget = 6\nOutput = [1,2]\n\nCase 3:\nnums = [3,3]\ntarget = 6\nOutput = [0,1]",
     submissionDate: new Date(Date.now() - 3 * 24 * 3600 * 1000).toISOString(),
     githubUrl: "https://github.com/octocat/leetcode-vault/blob/main/0001-two-sum/solution.py",
     leetCodeUrl: "https://leetcode.com/problems/two-sum/",
@@ -186,6 +188,7 @@ const mockMetadatas: Record<string, any> = {
     language: "java",
     runtime: "1 ms",
     memory: "42.5 MB",
+    testCases: "Case 1:\nl1 = [2,4,3]\nl2 = [5,6,4]\nOutput = [7,0,8]\n\nCase 2:\nl1 = [0]\nl2 = [0]\nOutput = [0]\n\nCase 3:\nl1 = [9,9,9,9,9,9,9]\nl2 = [9,9,9,9]\nOutput = [8,9,9,9,0,0,0,1]",
     submissionDate: new Date(Date.now() - 2 * 24 * 3600 * 1000).toISOString(),
     githubUrl: "https://github.com/octocat/leetcode-vault/blob/main/0002-add-two-numbers/solution.java",
     leetCodeUrl: "https://leetcode.com/problems/add-two-numbers/",
@@ -200,6 +203,7 @@ const mockMetadatas: Record<string, any> = {
     language: "javascript",
     runtime: "68 ms",
     memory: "44.1 MB",
+    testCases: "Case 1:\ns = \"abcabcbb\"\nOutput = 3\nExplanation: The answer is \"abc\", with the length of 3.\n\nCase 2:\ns = \"bbbbb\"\nOutput = 1\nExplanation: The answer is \"b\", with the length of 1.\n\nCase 3:\ns = \"pwwkew\"\nOutput = 3\nExplanation: The answer is \"wke\", with the length of 3.",
     submissionDate: new Date(Date.now() - 1 * 24 * 3600 * 1000).toISOString(),
     githubUrl: "https://github.com/octocat/leetcode-vault/blob/main/0003-longest-substring-without-repeating-characters/solution.js",
     leetCodeUrl: "https://leetcode.com/problems/longest-substring-without-repeating-characters/",
@@ -223,6 +227,14 @@ const extensions: Record<string, string> = {
   kotlin: "kt"
 };
 
+const slugToTitle = (s?: string): string => {
+  if (!s) return "";
+  return s
+    .split("-")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+};
+
 export const githubVault = {
   async getVault(repository: RepositoryContext): Promise<VaultData> {
     // 1. Primary Source: Supabase Database submissions table
@@ -236,16 +248,20 @@ export const githubVault = {
           .order("submitted_at", { ascending: false });
 
         if (!error && data && data.length > 0) {
-          const problems: ProblemRecord[] = data.map((sub: any) => ({
-            id: sub.problem_id,
-            title: sub.title,
-            slug: sub.slug,
-            difficulty: sub.difficulty || "Unknown",
-            language: sub.language,
-            topics: sub.topics || [],
-            solvedAt: sub.submitted_at,
-            folderName: sub.folder_name || `${String(sub.problem_id).padStart(4, "0")}-${sub.slug}`
-          }));
+          const problems: ProblemRecord[] = data.map((sub: any) => {
+            const fallbackTitle = slugToTitle(sub.slug);
+            const isCorruptedTitle = sub.title === "Two Sum" && sub.slug !== "two-sum";
+            return {
+              id: sub.problem_id,
+              title: isCorruptedTitle ? fallbackTitle : (sub.title || fallbackTitle),
+              slug: sub.slug,
+              difficulty: sub.difficulty || "Unknown",
+              language: sub.language,
+              topics: sub.topics || [],
+              solvedAt: sub.submitted_at,
+              folderName: sub.folder_name || `${String(sub.problem_id).padStart(4, "0")}-${sub.slug}`
+            };
+          });
 
           const stats: VaultStats = {
             totalSolved: problems.length,
@@ -305,17 +321,19 @@ export const githubVault = {
   
   async getProblem(repository: RepositoryContext, folderName: string, language?: string): Promise<Partial<SolutionMetadata>> {
     // 1. Primary Source: Supabase Database submissions table
-    const session = supabaseAuth.getSession();
-
-    if (supabase && session?.user?.id) {
+    if (supabase) {
       try {
+        const slug = folderName.replace(/^\d+-/, "");
+        const probIdMatch = folderName.match(/^(\d+)-/);
+        const probId = probIdMatch ? Number(probIdMatch[1]) : 0;
+
         let query = supabase
           .from("submissions")
           .select("*")
-          .eq("folder_name", folderName);
+          .or(`folder_name.eq.${folderName},slug.eq.${slug}${probId > 0 ? `,problem_id.eq.${probId}` : ""}`);
 
         if (language) {
-          query = query.eq("language", language);
+          query = query.ilike("language", language);
         }
 
         const { data } = await query
@@ -324,15 +342,20 @@ export const githubVault = {
           .maybeSingle();
 
         if (data) {
+          const fallbackTitle = slugToTitle(data.slug);
+          const isCorruptedTitle = data.title === "Two Sum" && data.slug !== "two-sum";
+          const displayTitle = isCorruptedTitle ? fallbackTitle : (data.title || fallbackTitle);
+
           return {
             problemId: data.problem_id,
-            title: data.title,
+            title: displayTitle,
             slug: data.slug,
             difficulty: data.difficulty,
             topics: data.topics || [],
             language: data.language,
             runtime: data.runtime,
             memory: data.memory,
+            testCases: data.test_cases || undefined,
             submissionDate: data.submitted_at,
             githubUrl: data.github_url || `https://github.com/${repository.owner}/${repository.repo}/blob/main/${folderName}`,
             leetCodeUrl: `https://leetcode.com/problems/${data.slug}/`,
@@ -443,5 +466,70 @@ export const githubVault = {
       { cache: "no-store" }
     );
     return response.ok ? response.text() : "Solution source unavailable.";
+  },
+
+  async getTestCases(repository: RepositoryContext, folderName: string, language?: string) {
+    // 1. Primary Source: Supabase Database submissions table
+    if (supabase) {
+      try {
+        const slug = folderName.replace(/^\d+-/, "");
+        const probIdMatch = folderName.match(/^(\d+)-/);
+        const probId = probIdMatch ? Number(probIdMatch[1]) : 0;
+
+        let query = supabase
+          .from("submissions")
+          .select("test_cases")
+          .or(`folder_name.eq.${folderName},slug.eq.${slug}${probId > 0 ? `,problem_id.eq.${probId}` : ""}`);
+
+        if (language) {
+          query = query.ilike("language", language);
+        }
+
+        let { data } = await query
+          .order("submitted_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        if ((!data?.test_cases || data.test_cases.trim().length <= 5) && language) {
+          const fallbackRes = await supabase
+            .from("submissions")
+            .select("test_cases")
+            .or(`folder_name.eq.${folderName},slug.eq.${slug}${probId > 0 ? `,problem_id.eq.${probId}` : ""}`)
+            .order("submitted_at", { ascending: false })
+            .limit(1)
+            .maybeSingle();
+          if (fallbackRes.data?.test_cases) {
+            data = fallbackRes.data;
+          }
+        }
+
+        if (data?.test_cases && data.test_cases.trim().length > 5) {
+          return data.test_cases;
+        }
+      } catch (e) {
+        console.warn("Failed to fetch test cases from Supabase:", e);
+      }
+    }
+
+    if (repository.owner === "octocat") {
+      try {
+        const isInstalled = await extensionBridge.ping();
+        if (isInstalled) {
+          const extTC = await extensionBridge.send<string>("GET_MOCK_FILE", { owner: repository.owner, repo: repository.repo, path: `${folderName}/testcases.txt` });
+          if (extTC) {
+            return extTC;
+          }
+        }
+      } catch (e) {
+        console.warn("Failed to get mock test cases from extension:", e);
+      }
+      return `Case 1:\nnums = [2,7,11,15]\ntarget = 9\nOutput = [0,1]\n\nCase 2:\nnums = [3,2,4]\ntarget = 6\nOutput = [1,2]\n\nCase 3:\nnums = [3,3]\ntarget = 6\nOutput = [0,1]`;
+    }
+
+    const response = await fetch(
+      raw(repository, `${folderName}/testcases.txt`),
+      { cache: "no-store" }
+    );
+    return response.ok ? response.text() : "";
   }
 };

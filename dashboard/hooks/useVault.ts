@@ -32,3 +32,13 @@ export const useSolutionCode = (repository: RepositoryContext | undefined, folde
     refetchOnWindowFocus: true,
   });
 
+export const useTestCases = (repository: RepositoryContext | undefined, folder?: string, language?: string) =>
+  useQuery({
+    queryKey: ["testCases", repository, folder, language],
+    queryFn: () => githubVault.getTestCases(repository!, folder!, language),
+    enabled: Boolean(repository && folder),
+    staleTime: 0,
+    refetchOnWindowFocus: true,
+  });
+
+

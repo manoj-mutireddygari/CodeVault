@@ -20,7 +20,7 @@ export function MacOsCodeViewer({
 }: MacOsCodeViewerProps) {
   const [copied, setCopied] = useState(false);
 
-  const handleCopy = () => {
+  const handleCopyCode = () => {
     if (!code) return;
     navigator.clipboard.writeText(code);
     setCopied(true);
@@ -56,7 +56,7 @@ export function MacOsCodeViewer({
         overflow: "hidden",
         display: "flex",
         flexDirection: "column",
-        height: "480px",
+        height: "560px",
         width: "100%",
         boxSizing: "border-box"
       }}
@@ -66,8 +66,8 @@ export function MacOsCodeViewer({
         style={{
           background: "#f1f5f9",
           borderBottom: "1px solid #e2e8f0",
-          height: "40px",
-          minHeight: "40px",
+          height: "42px",
+          minHeight: "42px",
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
@@ -76,16 +76,16 @@ export function MacOsCodeViewer({
           boxSizing: "border-box"
         }}
       >
-        {/* Left Section: macOS Dots + File Tab (Aligned to Left) */}
-        <div style={{ display: "flex", alignItems: "flex-end", height: "100%", gap: "14px" }}>
-          {/* macOS Window Controls (Red, Yellow, Green) */}
-          <div style={{ display: "flex", alignItems: "center", gap: "7px", paddingBottom: "13px" }}>
+        {/* Left Section: macOS Dots + Active File Tab */}
+        <div style={{ display: "flex", alignItems: "flex-end", height: "100%", gap: "12px" }}>
+          {/* macOS Controls */}
+          <div style={{ display: "flex", alignItems: "center", gap: "7px", paddingBottom: "13px", marginRight: "4px" }}>
             <span style={{ width: "12px", height: "12px", borderRadius: "50%", backgroundColor: "#ff5f56", border: "0.5px solid #e0443e", display: "inline-block" }} />
             <span style={{ width: "12px", height: "12px", borderRadius: "50%", backgroundColor: "#ffbd2e", border: "0.5px solid #dea123", display: "inline-block" }} />
             <span style={{ width: "12px", height: "12px", borderRadius: "50%", backgroundColor: "#27c93f", border: "0.5px solid #1aab29", display: "inline-block" }} />
           </div>
 
-          {/* VS Code Active Tab (Positioned to the left next to window dots) */}
+          {/* Solution Code Tab */}
           <div
             style={{
               display: "flex",
@@ -95,27 +95,27 @@ export function MacOsCodeViewer({
               borderTop: "2px solid #2563eb",
               borderLeft: "1px solid #e2e8f0",
               borderRight: "1px solid #e2e8f0",
-              padding: "0 16px",
-              height: "32px",
+              borderBottom: "none",
+              padding: "0 14px",
+              height: "33px",
               fontSize: "13px",
-              fontWeight: 500,
+              fontWeight: 600,
               color: "#1e293b",
               borderTopLeftRadius: "6px",
               borderTopRightRadius: "6px"
             }}
           >
             <FileCode size={14} style={{ color: "#2563eb" }} />
-            <span style={{ fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace', fontWeight: 600 }}>
+            <span style={{ fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace' }}>
               {displayFilename}
             </span>
-            <span style={{ width: "6px", height: "6px", borderRadius: "50%", backgroundColor: "#94a3b8", marginLeft: "4px" }} />
           </div>
         </div>
 
         {/* Right Section: Header Actions */}
         <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
           <button
-            onClick={handleCopy}
+            onClick={handleCopyCode}
             disabled={!code || isLoading}
             style={{
               display: "inline-flex",
@@ -172,13 +172,14 @@ export function MacOsCodeViewer({
         </div>
       </div>
 
-      {/* Editor Body with Horizontal & Vertical Scrolling */}
+      {/* Main Source Code View */}
       <div
         style={{
           flex: 1,
           background: "#ffffff",
           overflow: "auto",
           display: "flex",
+          flexDirection: "column",
           position: "relative"
         }}
       >
@@ -206,7 +207,7 @@ export function MacOsCodeViewer({
                 borderRadius: "50%"
               }}
             />
-            <span>Fetching solution source code from Supabase...</span>
+            <span>Fetching solution source code...</span>
           </div>
         ) : !code ? (
           <div
@@ -222,7 +223,7 @@ export function MacOsCodeViewer({
               fontSize: "13px"
             }}
           >
-            <p>No source code saved in Supabase for <b>{language}</b>.</p>
+            <p>No source code saved for <b>{language}</b>.</p>
           </div>
         ) : (
           <div style={{ display: "flex", minWidth: "100%", minHeight: "100%" }}>
@@ -248,7 +249,7 @@ export function MacOsCodeViewer({
               ))}
             </div>
 
-            {/* Code lines container with horizontal scrolling */}
+            {/* Code lines container */}
             <div
               style={{
                 padding: "14px 18px",
@@ -274,11 +275,10 @@ export function MacOsCodeViewer({
   );
 }
 
-// Tokenize line matching VS Code Light Theme syntax highlighting (Image 2)
+// Tokenize line matching VS Code Light Theme syntax highlighting
 function tokenizeLine(line: string, language: string) {
   if (!line) return <span>&nbsp;</span>;
 
-  // Single line comments
   if (line.trim().startsWith("//") || line.trim().startsWith("#")) {
     return <span style={{ color: "#008000", fontStyle: "italic" }}>{line}</span>;
   }

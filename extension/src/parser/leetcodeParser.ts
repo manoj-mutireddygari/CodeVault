@@ -75,21 +75,9 @@ const getProblemId = (): number => {
 };
 
 const getProblemTitle = (): string => {
-  // 1. Direct Regex on __NEXT_DATA__ payload for title
-  try {
-    const nextDataEl = document.getElementById("__NEXT_DATA__");
-    if (nextDataEl?.textContent) {
-      const raw = nextDataEl.textContent;
-      const match = raw.match(/"title"\s*:\s*"([^"]+)"/);
-      if (match && match[1] && !match[1].includes("LeetCode")) {
-        return match[1].trim();
-      }
-    }
-  } catch (e) {
-    // Fall back to DOM parsing
-  }
+  const currentSlug = slug();
 
-  // 2. Try title header elements in DOM
+  // 1. Try title header elements in live DOM (updates on SPA page navigation)
   const titleSelectors = [
     "[data-cy='question-title']",
     "div.text-title-large",
@@ -98,26 +86,49 @@ const getProblemTitle = (): string => {
     "[class*='text-title-large']",
     "div[class*='title__']",
     "a[class*='title__']",
-    "h1"
+    "div[data-track-load='description_content'] a",
+    "div[data-track-load='description_content'] h4",
+    "h1",
+    "h2"
   ];
 
   for (const selector of titleSelectors) {
     const el = document.querySelector(selector);
     if (el?.textContent) {
       const cleaned = el.textContent.trim().replace(/^\s*\d+\.\s*/, "").trim();
-      if (cleaned.length > 0) return cleaned;
+      if (cleaned.length > 0 && !cleaned.includes("LeetCode") && cleaned.length < 150) {
+        return cleaned;
+      }
     }
   }
 
-  // 3. Try document title
+  // 2. Try document title (updates on SPA navigation, e.g. "6. Zigzag Conversion - LeetCode")
   const docTitle = document.title;
   if (docTitle && docTitle.includes("- LeetCode")) {
     const cleaned = docTitle.trim().replace(/^\s*\d+\.\s*/, "").split(" - ")[0].trim();
-    if (cleaned.length > 0) return cleaned;
+    if (cleaned.length > 0 && cleaned !== "LeetCode") return cleaned;
   }
 
-  // 4. Fallback to slug title conversion
-  return slugToTitle(slug());
+  // 3. Try LeetCode Next.js page JSON payload (ONLY if matched to current slug)
+  try {
+    const nextDataEl = document.getElementById("__NEXT_DATA__");
+    if (nextDataEl?.textContent) {
+      const raw = nextDataEl.textContent;
+      if (currentSlug && raw.includes(`"${currentSlug}"`)) {
+        const slugIdx = raw.indexOf(`"${currentSlug}"`);
+        const snippet = raw.substring(Math.max(0, slugIdx - 600), Math.min(raw.length, slugIdx + 600));
+        const match = snippet.match(/"title"\s*:\s*"([^"]+)"/);
+        if (match && match[1] && !match[1].includes("LeetCode")) {
+          return match[1].trim();
+        }
+      }
+    }
+  } catch (e) {
+    // Fall back to slug title conversion
+  }
+
+  // 4. Fallback to slug title conversion (e.g. "zigzag-conversion" -> "Zigzag Conversion")
+  return slugToTitle(currentSlug);
 };
 
 const code = (): string => {
@@ -317,16 +328,15 @@ export function isRealSubmission(): boolean {
   const subResultSelectors = [
     "[data-e2e-locator='submission-result']",
     "[data-e2e-locator='submission-result-status']",
+    "[data-e2e-locator='console-submission-result']",
     "div[class*='submission-result']",
     "div[class*='submissionResult']",
     "div[data-cy='submission-result']",
-    // LeetCode newer UI selectors (2024+)
-    "[data-e2e-locator='console-submission-result']",
     "div[class*='result-container']",
     "div[class*='ResultContainer']",
     "div[class*='statusContainer']",
     "div[class*='status-container']",
-    "div[class*='result-state']",
+    "div[class*='result-state']"
   ];
 
   for (const sel of subResultSelectors) {
@@ -354,20 +364,22 @@ export function isRealSubmission(): boolean {
     if (document.body.innerText.includes("Accepted")) return true;
   }
 
-  // 4. Broader fallback: look for standalone "Accepted" text in result-like panels
-  // Only when on a problem page (not the submissions list page)
+  // 4. Standalone leaf match: find any element that ONLY contains "Accepted"
   if (location.pathname.match(/\/problems\/[^/]+\//) && !location.pathname.includes("/submissions/list")) {
-    // Find any element that ONLY contains the word "Accepted" (strict leaf match)
-    const allEls = Array.from(document.querySelectorAll("span, div, h3, h4, p"));
+    const allEls = Array.from(document.querySelectorAll("span, div, h3, h4, p, a"));
     for (const el of allEls) {
-      if (el.children.length === 0) {
-        const txt = el.textContent?.trim();
-        if (txt === "Accepted") {
-          // Verify it's not inside a test case / run results panel
-          const parent = el.closest(
-            "[class*='console'],[class*='testcase'],[class*='test-case'],[class*='run-result'],[data-e2e-locator='console-result']"
-          );
-          if (!parent) return true;
+      if (el.children.length === 0 && el.textContent?.trim() === "Accepted") {
+        const parent = el.parentElement;
+        const text = parent?.textContent || document.body.innerText || "";
+        // Valid submission result if it has Runtime/Memory/Beats indicators or is in a submission container
+        if (
+          text.includes("Runtime") ||
+          text.includes("Memory") ||
+          text.includes("Beats") ||
+          text.includes("Submitted") ||
+          el.closest("[class*='submission'], [class*='result'], [data-e2e-locator*='submission']")
+        ) {
+          return true;
         }
       }
     }
@@ -568,38 +580,383 @@ const getTopics = (): string[] => {
   return Array.from(topicsSet);
 };
 
+const fetchLeetCodeGraphQLDetails = async (problemSlug: string) => {
+  if (!problemSlug) return null;
+  try {
+    const csrfToken = document.cookie.match(/csrftoken=([^;]+)/)?.[1] || "";
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json"
+    };
+    if (csrfToken) {
+      headers["x-csrftoken"] = csrfToken;
+    }
+
+    const response = await fetch("https://leetcode.com/graphql", {
+      method: "POST",
+      headers,
+      credentials: "include",
+      body: JSON.stringify({
+        query: `
+          query questionData($titleSlug: String!) {
+            question(titleSlug: $titleSlug) {
+              questionFrontendId
+              title
+              titleSlug
+              difficulty
+              metaData
+              content
+              exampleTestcaseList
+              exampleTestcases
+              sampleTestCase
+              topicTags {
+                name
+              }
+            }
+          }
+        `,
+        variables: { titleSlug: problemSlug }
+      })
+    });
+
+    if (response.ok) {
+      const resData = await response.json();
+      if (resData?.data?.question) {
+        return resData.data.question;
+      }
+    }
+  } catch (e) {}
+
+  try {
+    const response = await fetch("/graphql", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        query: `
+          query questionData($titleSlug: String!) {
+            question(titleSlug: $titleSlug) {
+              questionFrontendId
+              title
+              titleSlug
+              difficulty
+              metaData
+              content
+              exampleTestcaseList
+              exampleTestcases
+              sampleTestCase
+              topicTags {
+                name
+              }
+            }
+          }
+        `,
+        variables: { titleSlug: problemSlug }
+      })
+    });
+    if (response.ok) {
+      const resData = await response.json();
+      return resData?.data?.question ?? null;
+    }
+  } catch (e) {}
+
+  return null;
+};
+
+const extractOutputsFromContent = (contentHtml: string): string[] => {
+  if (!contentHtml) return [];
+  const outputs: string[] = [];
+
+  const preMatches = contentHtml.matchAll(/<pre>[\s\S]*?<\/pre>/gi);
+  for (const m of preMatches) {
+    const block = m[0].replace(/<[^>]+>/g, "");
+    const outMatch = block.match(/Output:\s*([^\n]+)/i);
+    if (outMatch && outMatch[1]) {
+      outputs.push(outMatch[1].trim());
+    }
+  }
+
+  if (outputs.length === 0) {
+    const plainText = contentHtml.replace(/<[^>]+>/g, "");
+    const looseMatches = plainText.matchAll(/Output:\s*([^\n]+)/gi);
+    for (const lm of looseMatches) {
+      if (lm[1]) outputs.push(lm[1].trim());
+    }
+  }
+
+  return outputs;
+};
+
+const formatTestCasesFromGraphQL = (q: any): string | undefined => {
+  if (!q) return undefined;
+
+  let paramNames: string[] = [];
+  if (q.metaData) {
+    try {
+      const meta = typeof q.metaData === "string" ? JSON.parse(q.metaData) : q.metaData;
+      if (Array.isArray(meta?.params)) {
+        paramNames = meta.params.map((p: any) => p.name).filter(Boolean);
+      }
+    } catch {}
+  }
+
+  const formatInputWithParams = (rawLines: string[]) => {
+    if (paramNames.length > 0 && paramNames.length === rawLines.length) {
+      return rawLines.map((line, i) => (line.includes("=") ? line : `${paramNames[i]} = ${line}`)).join("\n");
+    }
+    return rawLines.join("\n");
+  };
+
+  const contentOutputs = q.content ? extractOutputsFromContent(q.content) : [];
+
+  if (Array.isArray(q.exampleTestcaseList) && q.exampleTestcaseList.length > 0) {
+    return q.exampleTestcaseList
+      .map((tc: string, idx: number) => {
+        const cleanTcLines = tc.replace(/\\n/g, "\n").replace(/\\"/g, '"').trim().split("\n").map((l: string) => l.trim()).filter(Boolean);
+        const formattedInput = formatInputWithParams(cleanTcLines);
+        let block = `Case ${idx + 1}:\nStatus: Passed\nInput:\n${formattedInput}`;
+        if (contentOutputs[idx]) {
+          block += `\nOutput = ${contentOutputs[idx]}\nExpected = ${contentOutputs[idx]}`;
+        }
+        return block;
+      })
+      .join("\n\n");
+  }
+
+  if (q.exampleTestcases && typeof q.exampleTestcases === "string") {
+    const rawLines = q.exampleTestcases.replace(/\\n/g, "\n").replace(/\\"/g, '"').trim().split("\n").map((l: string) => l.trim()).filter(Boolean);
+    if (rawLines.length > 0) {
+      const step = paramNames.length > 0 ? paramNames.length : 1;
+      const cases: string[] = [];
+      for (let i = 0; i < rawLines.length; i += step) {
+        const groupLines = rawLines.slice(i, i + step);
+        const formattedInput = formatInputWithParams(groupLines);
+        const cIdx = cases.length;
+        let block = `Case ${cIdx + 1}:\nStatus: Passed\nInput:\n${formattedInput}`;
+        if (contentOutputs[cIdx]) {
+          block += `\nOutput = ${contentOutputs[cIdx]}\nExpected = ${contentOutputs[cIdx]}`;
+        }
+        cases.push(block);
+      }
+      return cases.join("\n\n");
+    }
+  }
+
+  if (q.sampleTestCase && typeof q.sampleTestCase === "string") {
+    const rawLines = q.sampleTestCase.replace(/\\n/g, "\n").replace(/\\"/g, '"').trim().split("\n").map((l: string) => l.trim()).filter(Boolean);
+    const formattedInput = formatInputWithParams(rawLines);
+    if (formattedInput) {
+      let block = `Case 1:\nStatus: Passed\nInput:\n${formattedInput}`;
+      if (contentOutputs[0]) {
+        block += `\nOutput = ${contentOutputs[0]}\nExpected = ${contentOutputs[0]}`;
+      }
+      return block;
+    }
+  }
+
+  return undefined;
+};
+
+const getTestCasesFromDOM = (): string | undefined => {
+  // 1. Read from DOM bridge created by pageScript (MAIN world React Fiber context)
+  const bridge = document.getElementById("codevault-testcases-bridge") as HTMLTextAreaElement;
+  if (bridge && bridge.value && bridge.value.trim().length > 10) {
+    return bridge.value.trim();
+  }
+
+  const caseBlocks: string[] = [];
+
+  // 2. Try DOM console submission result panel (contains Input, Output, Expected)
+  try {
+    const consoleResultPanel = document.querySelector(
+      "[data-e2e-locator='console-submission-result'], div[class*='submission-result'], div[class*='result'], div[class*='Result']"
+    );
+    if (consoleResultPanel) {
+      const caseEls = Array.from(
+        consoleResultPanel.querySelectorAll("[class*='test-case'], [class*='testcase'], [class*='Case'], pre")
+      );
+      for (const el of caseEls) {
+        const txt = el.textContent?.trim();
+        if (txt && (txt.includes("Input") || txt.includes("Output") || txt.includes("Expected"))) {
+          if (!caseBlocks.includes(txt) && txt.length < 1500) {
+            caseBlocks.push(txt);
+          }
+        }
+      }
+    }
+  } catch (e) {}
+
+  // 2. Try problem description example pre/code blocks
+  try {
+    const preEls = Array.from(
+      document.querySelectorAll("div[data-track-load='description_content'] pre, [class*='description'] pre, pre, code")
+    );
+    for (const pre of preEls) {
+      const txt = pre.textContent?.trim();
+      if (txt && (txt.includes("Input:") || txt.includes("Input :") || txt.includes("Output:"))) {
+        let formatted = txt.toLowerCase().includes("status:") ? txt : `Status: Passed\n${txt}`;
+        if (formatted.includes("Output:") && !formatted.toLowerCase().includes("expected")) {
+          const outMatch = formatted.match(/Output[:=]\s*([^\n]+)/i);
+          if (outMatch && outMatch[1]) {
+            formatted = formatted + `\nExpected = ${outMatch[1].trim()}`;
+          }
+        }
+        if (!caseBlocks.includes(formatted) && txt.length < 1500) {
+          caseBlocks.push(formatted);
+        }
+      }
+    }
+  } catch (e) {}
+
+  // 3. Try __NEXT_DATA__ payload for exampleTestcaseList or exampleTestcases or sampleTestCase
+  try {
+    const nextDataEl = document.getElementById("__NEXT_DATA__");
+    if (nextDataEl?.textContent) {
+      const raw = nextDataEl.textContent;
+      const currentSlug = slug();
+
+      let scopeRaw = raw;
+      if (currentSlug && raw.includes(`"${currentSlug}"`)) {
+        const idx = raw.indexOf(`"${currentSlug}"`);
+        scopeRaw = raw.substring(Math.max(0, idx - 1000), Math.min(raw.length, idx + 2500));
+      }
+
+      const listMatch = scopeRaw.match(/"exampleTestcaseList"\s*:\s*(\[[\s\S]*?\])(?:,|\})/) || raw.match(/"exampleTestcaseList"\s*:\s*(\[[\s\S]*?\])(?:,|\})/);
+      if (listMatch && listMatch[1]) {
+        try {
+          const parsedList: string[] = JSON.parse(listMatch[1]);
+          if (Array.isArray(parsedList) && parsedList.length > 0) {
+            return parsedList.map((tc, idx) => `Case ${idx + 1}:\nStatus: Passed\nInput:\n${tc.trim()}`).join("\n\n");
+          }
+        } catch {}
+      }
+
+      const strMatch = scopeRaw.match(/"exampleTestcases"\s*:\s*"([^"]+)"/) || raw.match(/"exampleTestcases"\s*:\s*"([^"]+)"/);
+      if (strMatch && strMatch[1]) {
+        const rawCases = strMatch[1].replace(/\\n/g, "\n").replace(/\\"/g, '"').trim();
+        if (rawCases.length > 0) {
+          return `Case 1:\nStatus: Passed\nInput:\n${rawCases}`;
+        }
+      }
+    }
+  } catch (e) {}
+
+  if (caseBlocks.length > 0) {
+    return caseBlocks
+      .map((blk, i) => (blk.toLowerCase().includes("case ") ? blk : `Case ${i + 1}:\n${blk}`))
+      .join("\n\n");
+  }
+
+  return undefined;
+};
+
 const isCodeHeaderComplete = (src: string): boolean => {
   return Boolean(src && src.trim().length >= 10);
 };
 
-export function acceptedSubmission(): Submission | undefined {
+const ensureExpectedInTestCases = (text: string | undefined): string | undefined => {
+  if (!text || !text.trim()) return text;
+
+  const blocks = text.split(/(?=Case\s+\d+:)/i);
+  const processed = blocks.map((block) => {
+    if (!block.trim()) return block;
+    if (/Output[:=]/i.test(block) && !/Expected[:=]/i.test(block)) {
+      const match = block.match(/(Output[:=]\s*([^\n]+))/i);
+      if (match && match[2]) {
+        const val = match[2].trim();
+        return block.replace(match[1], `${match[1]}\nExpected: ${val}`);
+      }
+    }
+    return block;
+  });
+
+  return processed.join("");
+};
+
+const combineTestCases = (gqlText: string | undefined, domText: string | undefined): string | undefined => {
+  if (!gqlText) return domText;
+  if (!domText) return gqlText;
+
+  const gqlBlocks = gqlText.split(/(?=Case\s+\d+:)/i).map((b) => b.trim()).filter(Boolean);
+  const domBlocks = domText.split(/(?=Case\s+\d+:)/i).map((b) => b.trim()).filter(Boolean);
+
+  if (gqlBlocks.length === 0) return domText;
+  if (domBlocks.length === 0) return gqlText;
+
+  const domOutputs: { output?: string; expected?: string }[] = [];
+  for (const block of domBlocks) {
+    let output: string | undefined;
+    let expected: string | undefined;
+
+    const outMatch = block.match(/(?:Output|code_output)[:=]\s*([^\n]+)/i);
+    const expMatch = block.match(/(?:Expected|expected_output)[:=]\s*([^\n]+)/i);
+
+    if (outMatch) output = outMatch[1].trim();
+    if (expMatch) expected = expMatch[1].trim();
+
+    if (output || expected) {
+      domOutputs.push({ output, expected });
+    }
+  }
+
+  const mergedGqlBlocks = gqlBlocks.map((block, idx) => {
+    const domInfo = domOutputs[idx] || (idx === 0 ? domOutputs[0] : undefined);
+    let result = block;
+    if (domInfo) {
+      if (domInfo.output && !result.toLowerCase().includes("output")) {
+        result += `\nOutput = ${domInfo.output}`;
+      }
+      if (domInfo.expected && !result.toLowerCase().includes("expected")) {
+        result += `\nExpected = ${domInfo.expected}`;
+      }
+    }
+    return result;
+  });
+
+  return mergedGqlBlocks.join("\n\n");
+};
+
+export async function acceptedSubmission(): Promise<Submission | undefined> {
   if (!isRealSubmission()) return undefined;
 
-  const id = getProblemId();
   const problemSlug = slug();
-  const problemTitle = getProblemTitle();
   const sourceCode = code();
 
-  if (!id || !problemSlug || !problemTitle || !sourceCode) return undefined;
-
-  const language = getLanguage();
+  if (!problemSlug || !sourceCode) return undefined;
   if (!isCodeHeaderComplete(sourceCode)) return undefined;
 
+  // 1. Fetch exact metadata and test cases from LeetCode GraphQL API for 100% precision
+  const gqlData = await fetchLeetCodeGraphQLDetails(problemSlug);
+
+  const id = gqlData?.questionFrontendId ? Number(gqlData.questionFrontendId) : getProblemId();
+  const rawTitle = gqlData?.title || getProblemTitle();
+  const problemTitle = (rawTitle === "Two Sum" && problemSlug !== "two-sum") ? slugToTitle(problemSlug) : rawTitle;
+
+  const topics = (gqlData?.topicTags && gqlData.topicTags.length > 0)
+    ? gqlData.topicTags.map((t: any) => t.name)
+    : getTopics();
+  const diff = (gqlData?.difficulty as Submission["difficulty"]) || difficulty();
+  const gqlTestCases = formatTestCasesFromGraphQL(gqlData);
+  const domTestCases = getTestCasesFromDOM();
+  const rawTestCases = combineTestCases(gqlTestCases, domTestCases);
+  const testCases = ensureExpectedInTestCases(rawTestCases);
+
+  if (!id || !problemTitle) return undefined;
+
+  const language = getLanguage();
   const runtime = getRuntime();
   const memory = getMemory();
-  const topics = getTopics();
 
   return {
     problemId: id,
     title: problemTitle,
     slug: problemSlug,
-    difficulty: difficulty(),
+    difficulty: diff,
     topics,
     language,
     runtime,
     memory,
     submittedAt: new Date().toISOString(),
     sourceCode,
+    testCases,
     leetCodeUrl: location.href.split("?")[0]
   };
 }
