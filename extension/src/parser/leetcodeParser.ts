@@ -661,6 +661,17 @@ const fetchLeetCodeGraphQLDetails = async (problemSlug: string) => {
   return null;
 };
 
+const cleanHtmlEntities = (str: string): string => {
+  if (!str) return str;
+  return str
+    .replace(/&quot;/g, '"')
+    .replace(/&apos;/g, "'")
+    .replace(/&#39;/g, "'")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&amp;/g, "&");
+};
+
 const extractOutputsFromContent = (contentHtml: string): string[] => {
   if (!contentHtml) return [];
   const outputs: string[] = [];
@@ -670,7 +681,7 @@ const extractOutputsFromContent = (contentHtml: string): string[] => {
     const block = m[0].replace(/<[^>]+>/g, "");
     const outMatch = block.match(/Output:\s*([^\n]+)/i);
     if (outMatch && outMatch[1]) {
-      outputs.push(outMatch[1].trim());
+      outputs.push(cleanHtmlEntities(outMatch[1].trim()));
     }
   }
 
@@ -678,7 +689,7 @@ const extractOutputsFromContent = (contentHtml: string): string[] => {
     const plainText = contentHtml.replace(/<[^>]+>/g, "");
     const looseMatches = plainText.matchAll(/Output:\s*([^\n]+)/gi);
     for (const lm of looseMatches) {
-      if (lm[1]) outputs.push(lm[1].trim());
+      if (lm[1]) outputs.push(cleanHtmlEntities(lm[1].trim()));
     }
   }
 

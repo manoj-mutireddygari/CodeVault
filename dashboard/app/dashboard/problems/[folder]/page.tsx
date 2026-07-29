@@ -19,6 +19,17 @@ interface ParsedTestCase {
   expected?: string;
 }
 
+function decodeEntities(str?: string): string {
+  if (!str) return "";
+  return str
+    .replace(/&quot;/g, '"')
+    .replace(/&apos;/g, "'")
+    .replace(/&#39;/g, "'")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&amp;/g, "&");
+}
+
 function parseTestCases(rawText?: string): ParsedTestCase[] {
   if (!rawText || !rawText.trim()) return [];
   const rawStr = rawText.trim();
@@ -60,9 +71,9 @@ function parseTestCases(rawText?: string): ParsedTestCase[] {
         if (rest) {
           if (rest.includes("=")) {
             const parts = rest.split("=");
-            params.push({ key: parts[0].trim(), value: parts.slice(1).join("=").trim() });
+            params.push({ key: decodeEntities(parts[0].trim()), value: decodeEntities(parts.slice(1).join("=").trim()) });
           } else {
-            params.push({ value: rest });
+            params.push({ value: decodeEntities(rest) });
           }
         }
       } else if (line.includes("=")) {
@@ -74,7 +85,7 @@ function parseTestCases(rawText?: string): ParsedTestCase[] {
         } else if (key.toLowerCase() === "expected" || key.toLowerCase() === "expected output") {
           expected = val;
         } else {
-          params.push({ key, value: val });
+          params.push({ key: decodeEntities(key), value: decodeEntities(val) });
         }
       } else if (line.includes(":")) {
         const parts = line.split(":");
@@ -85,14 +96,17 @@ function parseTestCases(rawText?: string): ParsedTestCase[] {
         } else if (key.toLowerCase() === "expected" || key.toLowerCase() === "expected output") {
           expected = val;
         } else if (val) {
-          params.push({ key, value: val });
+          params.push({ key: decodeEntities(key), value: decodeEntities(val) });
         } else {
-          params.push({ value: line });
+          params.push({ value: decodeEntities(line) });
         }
       } else {
-        params.push({ value: line });
+        params.push({ value: decodeEntities(line) });
       }
     }
+
+    if (output) output = decodeEntities(output);
+    if (expected) expected = decodeEntities(expected);
 
     if (output && !expected) expected = output;
     if (expected && !output) output = expected;
